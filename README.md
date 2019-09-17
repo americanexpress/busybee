@@ -35,6 +35,8 @@ In some ways, BusyBee is similar to [CountingIdlingResource][], but it does have
 Include the BusyBee dependencies in your `build.gradle` files. When tests are not running, the **no-op** implementation
 is automatically used to minimize overhead of BusyBee (since it is only needed during tests).
 
+[ ![Latest Version](https://api.bintray.com/packages/americanexpress/maven/io.americanexpress.busybee/images/download.svg) ](https://bintray.com/americanexpress/maven/io.americanexpress.busybee/_latestVersion)
+
 _Required_: For Android modules:
 
 ```gradle
