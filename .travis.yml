@@ -13,13 +13,9 @@ script:
 
 deploy:
   - provider: script
-    script: ./gradlew build publish -Dsnapshot=false --stacktrace
+    script: MAVEN_REPO_URL="https://api.bintray.com/maven/americanexpress/maven/io.americanexpress.busybee/;publish=0" ./gradlew build publish -Dsnapshot=false --stacktrace
     on:
       tags: true
-  - provider: script
-    script: ./gradlew build publish --stacktrace
-    on:
-      branch: master
 
 cache:
   directories:
