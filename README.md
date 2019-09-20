@@ -49,10 +49,10 @@ _Optional_: Only needed, if you want to use BusyBee in a non-Android module:
     implementation 'io.americanexpress.busybee:busybee-core:$version'
 ```
 
-Snapshot builds from master are available here:
 ```gradle
     repositories {
-        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' }
+        jcenter() // for release builds
+        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' } // `-SNAPSHOT` builds from `master` 
     }    
 ```
 
