@@ -16,6 +16,10 @@ deploy:
     script: MAVEN_REPO_URL="https://api.bintray.com/maven/americanexpress/maven/io.americanexpress.busybee/;publish=0" ./gradlew build publish -Dsnapshot=false --stacktrace
     on:
       tags: true
+  - provider: script
+    script: MAVEN_REPO_URL="https://oss.jfrog.org/artifactory/oss-snapshot-local/" ./gradlew build publish --stacktrace
+    on:
+      branches: "master"
 
 cache:
   directories:
