@@ -12,37 +12,29 @@
  * the License.
  */
 
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent
+import io.americanexpress.busybee.internal.EnvironmentChecks.doNotPretendTestsAreNotRunning
+import io.americanexpress.busybee.internal.EnvironmentChecks.pretendTestsAreNotRunning
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
 
-import static io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent;
-import static io.americanexpress.busybee.internal.EnvironmentChecks.doNotPretendTestsAreNotRunning;
-import static io.americanexpress.busybee.internal.EnvironmentChecks.pretendTestsAreNotRunning;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-
-public class BusyBeeSingletonTest {
-
+class BusyBeeSingletonTest {
     @Test
-    public void whenInJvmTest_espressoTestsAreNotRunning() {
-        assertThat(androidJunitRunnerIsPresent())
-                .isFalse();
+    fun whenInJvmTest_espressoTestsAreNotRunning() {
+        assertThat(androidJunitRunnerIsPresent()).isFalse()
     }
 
     @Test
-    public void whenInJvmTest_useRealBusyBee() {
-        assertThat(BusyBeeSingleton.create())
-                .isInstanceOf(RealBusyBee.class);
+    fun whenInJvmTest_useRealBusyBee() {
+        assertThat(BusyBeeSingleton.create()).isInstanceOf(RealBusyBee::class.java)
     }
 
     @Test
-    public void whenTestsAreNotRunning_useNoOpBusyBee() {
-        pretendTestsAreNotRunning();
-
-        assertThat(BusyBeeSingleton.create())
-                .isInstanceOf(NoOpBusyBee.class);
-
-        doNotPretendTestsAreNotRunning();
+    fun whenTestsAreNotRunning_useNoOpBusyBee() {
+        pretendTestsAreNotRunning()
+        assertThat(BusyBeeSingleton.create()).isInstanceOf(NoOpBusyBee::class.java)
+        doNotPretendTestsAreNotRunning()
     }
 }

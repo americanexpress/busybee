@@ -12,25 +12,24 @@
  * the License.
  */
 
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
 
-import static io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-public class BusyBeeSingletonTest {
+class BusyBeeSingletonTest {
     @Test
-    public void whenIdlingResourceIncluded_thenWeDetectItsPresence() {
+    fun whenIdlingResourceIncluded_thenWeDetectItsPresence() {
         assertThat(androidJunitRunnerIsPresent())
-                .as("We included the idling-resource dependencies, so this should be true")
-                .isTrue();
+            .`as`("We included the idling-resource dependencies, so this should be true")
+            .isTrue()
     }
 
     @Test
-    public void whenIdlingResourceIncluded_thenWeUseRealBusyBee() {
+    fun whenIdlingResourceIncluded_thenWeUseRealBusyBee() {
         assertThat(BusyBeeSingleton.singleton())
-                .as("We included the idling-resource dependencies, so must use RealBusyBee")
-                .isInstanceOf(RealBusyBee.class);
+            .`as`("We included the idling-resource dependencies, so must use RealBusyBee")
+            .isInstanceOf(RealBusyBee::class.java)
     }
 }

@@ -12,29 +12,27 @@
  * the License.
  */
 
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent
+import io.americanexpress.busybee.internal.EnvironmentChecks.isAndroid
+import io.americanexpress.busybee.internal.EnvironmentChecks.testsAreRunning
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
 
-import static io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent;
-import static io.americanexpress.busybee.internal.EnvironmentChecks.isAndroid;
-import static io.americanexpress.busybee.internal.EnvironmentChecks.testsAreRunning;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-public class EnvironmentChecksTest {
-
+class EnvironmentChecksTest {
     @Test
-    public void testsAreRunningShouldAlwaysBeTrueInATest() {
-        assertThat(testsAreRunning()).isTrue();
+    fun testsAreRunningShouldAlwaysBeTrueInATest() {
+        assertThat(testsAreRunning()).isTrue()
     }
 
     @Test
-    public void whenInNonAndroidModule_thenEspressoIdlingResourceIsPresentIsFalse() {
-        assertThat(androidJunitRunnerIsPresent()).isFalse();
+    fun whenInNonAndroidModule_thenEspressoIdlingResourceIsPresentIsFalse() {
+        assertThat(androidJunitRunnerIsPresent()).isFalse()
     }
 
     @Test
-    public void whenInNonAndroidModule_thenIsAndroidReturnsFalse() {
-        assertThat(isAndroid()).isFalse();
+    fun whenInNonAndroidModule_thenIsAndroidReturnsFalse() {
+        assertThat(isAndroid()).isFalse()
     }
 }

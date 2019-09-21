@@ -12,23 +12,16 @@
  * the License.
  */
 
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
 
-import java.util.concurrent.Executor;
-
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-
-public class MainThreadTest {
-
+class MainThreadTest {
     @Test
-    public void whenOnJvm_thenWeGetTheNonAndroidExecutor() {
-        Executor executor = MainThread.singletonExecutor();
-
-        assertThat(executor.getClass().getName())
-                .isNotEqualTo("io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor");
+    fun whenOnJvm_thenWeGetTheNonAndroidExecutor() {
+        val executor = MainThread.singletonExecutor()
+        assertThat(executor.javaClass.name)
+            .isNotEqualTo("io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor")
     }
-
 }

@@ -11,80 +11,77 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import io.americanexpress.busybee.BusyBee.Category.GENERAL
+import io.americanexpress.busybee.BusyBee.Category.NETWORK
+import io.americanexpress.busybee.BusyBeeExecutorWrapper
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit.SECONDS
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import io.americanexpress.busybee.BusyBeeExecutorWrapper;
-
-import static io.americanexpress.busybee.BusyBee.Category.GENERAL;
-import static io.americanexpress.busybee.BusyBee.Category.NETWORK;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-public class BusyBeeExecutorWrapperTest {
+class BusyBeeExecutorWrapperTest {
     @Test
-    public void whenExecutorWrappedForNoOp_thenItDoesNotGetWrapped() {
-        Executor originalExecutor = Runnable::run;
-        final Executor wrappedExecutor
-                = BusyBeeExecutorWrapper.with(new NoOpBusyBee())
+    fun whenExecutorWrappedForNoOp_thenItDoesNotGetWrapped() {
+        val originalExecutor = Executor { obj: Runnable -> obj.run() }
+        val wrappedExecutor =
+            BusyBeeExecutorWrapper.with(NoOpBusyBee())
                 .wrapExecutor(originalExecutor)
-                .build();
-
-        assertThat(wrappedExecutor == originalExecutor)
-                .as("Expected wrapped executor to equal original executor for NoOpBusyBee")
-                .isTrue();
+                .build()
+        assertThat(wrappedExecutor === originalExecutor)
+            .`as`("Expected wrapped executor to equal original executor for NoOpBusyBee")
+            .isTrue()
     }
 
     @Test
-    public void whenWrappedWithBusyBeeExecutorWrapper_thenBusyBeeSaysItIsBusy() throws Exception {
-        ExecutorService mainThread = (ExecutorService) MainThread.singletonExecutor();
-        RealBusyBee busyBee = new RealBusyBee(mainThread);
-
-        ExecutorService wrappedThread = Executors.newSingleThreadExecutor();
-        final Executor executorWrapper = BusyBeeExecutorWrapper.with(busyBee)
+    fun whenWrappedWithBusyBeeExecutorWrapper_thenBusyBeeSaysItIsBusy() {
+        val mainThread = MainThread.singletonExecutor() as ExecutorService
+        val busyBee = RealBusyBee(mainThread)
+        val wrappedThread = Executors.newSingleThreadExecutor()
+        val executorWrapper =
+            BusyBeeExecutorWrapper.with(busyBee)
                 .executeInCategory(NETWORK)
                 .wrapExecutor(wrappedThread)
-                .build();
+                .build()
 
-        final CountDownLatch busyLatch = new CountDownLatch(1);
-        executorWrapper.execute(() -> {
+        val busyLatch = CountDownLatch(1)
+        executorWrapper.execute {
             try {
-                busyLatch.await();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                busyLatch.await()
+            } catch (e: InterruptedException) {
+                throw RuntimeException(e)
             }
-        });
+        }
 
         // shouldn't complete anything because our executor uses NETWORK category
-        busyBee.completedEverythingInCategory(GENERAL);
+        busyBee.completedEverythingInCategory(GENERAL)
 
-        assertThat(busyBee.isBusy())
-                .as("Should be \"busy\" waiting for Latch")
-                .isEqualTo(true);
-        assertThat(busyBee.isNotBusy())
-                .as("Should be \"busy\" waiting for Latch")
-                .isEqualTo(false);
+        assertThat(busyBee.isBusy)
+            .`as`("Should be \"busy\" waiting for Latch")
+            .isEqualTo(true)
+        assertThat(busyBee.isNotBusy)
+            .`as`("Should be \"busy\" waiting for Latch")
+            .isEqualTo(false)
 
-        busyLatch.countDown();
+        busyLatch.countDown()
+
         // wrappedThread will post a Runnable to MainThread to tell BusyBee it completed.
-        wrappedThread.shutdown();
-        wrappedThread.awaitTermination(10, SECONDS);
+        wrappedThread.shutdown()
+        wrappedThread.awaitTermination(10, SECONDS)
 
         // wait for the completion message from the wrapped thread to run on the main thread.
-        mainThread.shutdown();
-        mainThread.awaitTermination(10, SECONDS);
+        mainThread.shutdown()
+        mainThread.awaitTermination(10, SECONDS)
 
-        assertThat(busyBee.isBusy())
-                .as("Should no longer be \"busy\" waiting for Latch")
-                .isEqualTo(false);
-        assertThat(busyBee.isNotBusy())
-                .as("Should no longer be \"busy\" waiting for Latch")
-                .isEqualTo(true);
+        assertThat(busyBee.isBusy)
+            .`as`("Should no longer be \"busy\" waiting for Latch")
+            .isEqualTo(false)
+        assertThat(busyBee.isNotBusy)
+            .`as`("Should no longer be \"busy\" waiting for Latch")
+            .isEqualTo(true)
     }
 }

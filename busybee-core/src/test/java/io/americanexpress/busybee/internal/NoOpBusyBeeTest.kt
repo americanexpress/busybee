@@ -11,41 +11,37 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import io.americanexpress.busybee.BusyBee.Category.GENERAL
+import io.americanexpress.busybee.BusyBee.Category.NETWORK
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
 
-import static io.americanexpress.busybee.BusyBee.Category.GENERAL;
-import static io.americanexpress.busybee.BusyBee.Category.NETWORK;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-public class NoOpBusyBeeTest {
+class NoOpBusyBeeTest {
     @Test
-    public void whenNoOpBusyWith_thenNotBusy() {
-        final NoOpBusyBee busyBee = new NoOpBusyBee();
-        busyBee.busyWith("SOMETHING");
+    fun whenNoOpBusyWith_thenNotBusy() {
+        val busyBee = NoOpBusyBee()
+        busyBee.busyWith("SOMETHING")
 
-        assertThat(busyBee.isNotBusy()).isTrue();
-        assertThat(busyBee.isBusy()).isFalse();
+        assertThat(busyBee.isNotBusy).isTrue()
+        assertThat(busyBee.isBusy).isFalse()
     }
 
-
     @Test
-    public void whenNoOpBusyWith_thenNothingThrowsException() {
-        final NoOpBusyBee busyBee = new NoOpBusyBee();
-        busyBee.busyWith("SOMETHING");
-        busyBee.completed("SOMETHING");
-        busyBee.payAttentionToCategory(NETWORK);
-        busyBee.ignoreCategory(NETWORK);
-        busyBee.completedEverything();
-        busyBee.completedEverythingInCategory(GENERAL);
-        busyBee.getName();
+    fun whenNoOpBusyWith_thenNothingThrowsException() {
+        val busyBee = NoOpBusyBee()
+        busyBee.busyWith("SOMETHING")
+        busyBee.completed("SOMETHING")
+        busyBee.payAttentionToCategory(NETWORK)
+        busyBee.ignoreCategory(NETWORK)
+        busyBee.completedEverything()
+        busyBee.completedEverythingInCategory(GENERAL)
+        busyBee.name
 
-        assertThat(busyBee.isNotBusy()).isTrue();
-        assertThat(busyBee.isBusy()).isFalse();
-        assertThat(busyBee.getName()).isNotNull();
-        assertThat(busyBee.toStringVerbose()).isNotNull();
+        assertThat(busyBee.isNotBusy).isTrue()
+        assertThat(busyBee.isBusy).isFalse()
+        assertThat(busyBee.name).isNotNull()
+        assertThat(busyBee.toStringVerbose()).isNotNull()
     }
-
-
 }

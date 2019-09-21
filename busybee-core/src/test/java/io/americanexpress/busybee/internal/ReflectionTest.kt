@@ -12,26 +12,24 @@
  * the License.
  */
 
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import io.americanexpress.busybee.internal.Reflection.classIsFound
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
 
-import static io.americanexpress.busybee.internal.Reflection.classIsFound;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-public class ReflectionTest {
-
+class ReflectionTest {
     @Test
-    public void canFindThisClass() {
+    fun canFindThisClass() {
         assertThat(classIsFound("io.americanexpress.busybee.internal.ReflectionTest"))
-                .as("must be able to find this class")
-                .isTrue();
+            .`as`("must be able to find this class")
+            .isTrue()
     }
 
     @Test
-    public void cantFindNonExistentClass() {
+    fun cantFindNonExistentClass() {
         assertThat(classIsFound("com.doesnt.exist.Class"))
-                .as("That class should not exist")
-                .isFalse();
+            .`as`("That class should not exist")
+            .isFalse()
     }
 }
