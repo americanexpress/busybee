@@ -218,18 +218,21 @@ class SetMultiMapTest {
         map.add(3, "D")
 
         assertThat(map.toString()).isEqualTo(
-            "\n{\n"
-                    + "'1'\n"
-                    + " ├─ 'A'\n"
-                    + " └─ 'B'\n"
-                    + "'2'\n"
-                    + " ├─ 'X'\n"
-                    + " └─ 'Y'\n"
-                    + "'3'\n"
-                    + " ├─ 'C'\n"
-                    + " ├─ 'D'\n"
-                    + " └─ 'E'\n"
-                    + "}"
+            "\n" +
+                    """
+               {
+               '1'
+                ├─ 'A'
+                └─ 'B'
+               '2'
+                ├─ 'X'
+                └─ 'Y'
+               '3'
+                ├─ 'C'
+                ├─ 'D'
+                └─ 'E'
+               }""".trimIndent()
         )
+
     }
 }
