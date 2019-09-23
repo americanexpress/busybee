@@ -13,6 +13,7 @@
  */
 plugins {
     id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
 }
 
 repositories {
@@ -41,6 +42,8 @@ android {
 
 dependencies {
     api project(":busybee-core")
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "androidx.test.espresso:espresso-idling-resource:${deps.androidx.test.espresso.idling_resource}"
     implementation "androidx.annotation:annotation:${deps.androidx.annotation}"
 

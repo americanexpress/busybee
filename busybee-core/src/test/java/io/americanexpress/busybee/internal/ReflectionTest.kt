@@ -12,24 +12,24 @@
  * the License.
  */
 
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import org.junit.Test;
+import io.americanexpress.busybee.internal.Reflection.classIsFound
+import org.assertj.core.api.Java6Assertions.assertThat
+import org.junit.Test
 
-import io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor;
-
-import static io.americanexpress.busybee.internal.EnvironmentChecks.isAndroid;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
-public class AndroidMainThreadExecutorTest {
-
+class ReflectionTest {
     @Test
-    public void whenOnAndroid_thenWeGetAndroidMainThreadExecutor() {
-        assertThat(MainThread.singletonExecutor()).isInstanceOf(AndroidMainThreadExecutor.class);
+    fun canFindThisClass() {
+        assertThat(classIsFound("io.americanexpress.busybee.internal.ReflectionTest"))
+            .`as`("must be able to find this class")
+            .isTrue()
     }
 
     @Test
-    public void whenOnAndroid_thenIsAndroidShouldBeTrue() {
-        assertThat(isAndroid()).isTrue();
+    fun cantFindNonExistentClass() {
+        assertThat(classIsFound("com.doesnt.exist.Class"))
+            .`as`("That class should not exist")
+            .isFalse()
     }
 }
