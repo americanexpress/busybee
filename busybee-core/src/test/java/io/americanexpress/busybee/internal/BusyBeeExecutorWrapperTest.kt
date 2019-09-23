@@ -62,10 +62,10 @@ class BusyBeeExecutorWrapperTest {
 
         assertThat(busyBee.isBusy)
             .`as`("Should be \"busy\" waiting for Latch")
-            .isEqualTo(true)
+            .isTrue()
         assertThat(busyBee.isNotBusy)
             .`as`("Should be \"busy\" waiting for Latch")
-            .isEqualTo(false)
+            .isFalse()
 
         busyLatch.countDown()
 
@@ -79,9 +79,9 @@ class BusyBeeExecutorWrapperTest {
 
         assertThat(busyBee.isBusy)
             .`as`("Should no longer be \"busy\" waiting for Latch")
-            .isEqualTo(false)
+            .isFalse()
         assertThat(busyBee.isNotBusy)
             .`as`("Should no longer be \"busy\" waiting for Latch")
-            .isEqualTo(true)
+            .isTrue()
     }
 }
