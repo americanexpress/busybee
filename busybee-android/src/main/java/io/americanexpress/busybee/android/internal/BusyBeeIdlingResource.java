@@ -27,7 +27,7 @@ public class BusyBeeIdlingResource implements IdlingResource {
 
     private final BusyBee busyBee;
 
-    BusyBeeIdlingResource(final BusyBee busyBee) {
+    public BusyBeeIdlingResource(final BusyBee busyBee) {
         this.busyBee = busyBee;
     }
 
