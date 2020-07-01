@@ -18,7 +18,8 @@ import java.lang.reflect.Field;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.americanexpress.busybee.internal.EnvironmentChecks.isAndroid;
+import static io.americanexpress.busybee.internal.EnvironmentChecks.hasWorkingAndroidMainLooper;
+import static io.americanexpress.busybee.internal.Reflection.clazz;
 
 public class MainThread {
     // Double check locking https://errorprone.info/bugpattern/DoubleCheckedLocking
@@ -42,14 +43,11 @@ public class MainThread {
          * Can only load AndroidMainThreadExecutor if we are on Android (not JVM)
          * else will we get class not found errors.
          */
-        if (isAndroid()) {
-            Class<?> androidExecutorClass1;
-            try {
-                androidExecutorClass1 = Class.forName("io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor");
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Must load busybee-android when running on Android", e);
-            }
-            Field instance = Reflection.getField(androidExecutorClass1, "INSTANCE");
+        if (hasWorkingAndroidMainLooper()) {
+            Class<?> androidExecutorClass
+                    = clazz("io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor",
+                    "Must add busybee-android dependency when running on Android");
+            Field instance = Reflection.getField(androidExecutorClass, "INSTANCE");
             return (Executor) Reflection.getValue(instance);
         } else {
             return jvmExecutor();

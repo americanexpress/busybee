@@ -15,24 +15,21 @@
 package io.americanexpress.busybee.internal
 
 import io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent
-import io.americanexpress.busybee.internal.EnvironmentChecks.hasWorkingAndroidMainLooper
-import io.americanexpress.busybee.internal.EnvironmentChecks.testsAreRunning
 import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Test
 
-class EnvironmentChecksTest {
+class BusyBeeSingletonJvmTest {
     @Test
-    fun testsAreRunningShouldAlwaysBeTrueInATest() {
-        assertThat(testsAreRunning()).isTrue()
+    fun whenIdlingResourceIncluded_thenWeDetectItsPresence() {
+        assertThat(androidJunitRunnerIsPresent())
+            .`as`("We included the idling-resource dependencies, so this should be true")
+            .isTrue()
     }
 
     @Test
-    fun whenInNonAndroidModule_thenEspressoIdlingResourceIsPresentIsFalse() {
-        assertThat(androidJunitRunnerIsPresent()).isFalse()
-    }
-
-    @Test
-    fun whenInNonAndroidModule_thenIsAndroidReturnsFalse() {
-        assertThat(hasWorkingAndroidMainLooper()).isFalse()
+    fun whenIdlingResourceIncluded_thenWeUseRealBusyBee() {
+        assertThat(BusyBeeSingleton.singleton())
+            .`as`("We included the idling-resource dependencies, so must use RealBusyBee")
+            .isInstanceOf(RealBusyBee::class.java)
     }
 }

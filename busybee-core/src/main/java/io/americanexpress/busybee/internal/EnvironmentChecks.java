@@ -16,6 +16,16 @@ package io.americanexpress.busybee.internal;
 
 import androidx.annotation.VisibleForTesting;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeoutException;
+
+import static io.americanexpress.busybee.internal.Reflection.clazz;
+import static io.americanexpress.busybee.internal.Reflection.invokeMethod;
+import static io.americanexpress.busybee.internal.Reflection.invokeStaticMethod;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 public class EnvironmentChecks {
 
     @VisibleForTesting
@@ -37,8 +47,25 @@ public class EnvironmentChecks {
         return Reflection.classIsFound("androidx.test.runner.AndroidJUnitRunner");
     }
 
-    static boolean isAndroid() {
-        return Reflection.classIsFound("android.app.Application");
+    // can't reference Android types directly, so have to use raw types.
+    @SuppressWarnings({"rawtypes"})
+    static boolean hasWorkingAndroidMainLooper() {
+        Class looperClass = clazz("android.os.Looper");
+        Object mainLooper;
+        try {
+            mainLooper = invokeStaticMethod(looperClass, "getMainLooper");
+        } catch (InvocationTargetException e) {
+            return false;
+        }
+        Class handlerClass = clazz("android.os.Handler");
+        Object handler = Reflection.invokeConstructor(handlerClass, looperClass, mainLooper);
+        FutureTask<Boolean> runnable = new FutureTask<>(() -> true);
+        invokeMethod(handler, "postAtFrontOfQueue", new Class[]{Runnable.class}, new Object[]{runnable});
+        try {
+            return runnable.get(2, SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            return false;
+        }
     }
 
     @VisibleForTesting
