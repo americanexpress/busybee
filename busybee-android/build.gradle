@@ -53,5 +53,4 @@ dependencies {
 
     testImplementation "org.assertj:assertj-core:${deps.assertj}"
     testImplementation "junit:junit:${deps.junit}"
-    testImplementation "androidx.test.espresso:espresso-core:${deps.androidx.test.espresso.core}"
 }

@@ -21,13 +21,13 @@ import org.junit.Test
 
 class AndroidMainThreadExecutorJvmTest {
     @Test
-    fun whenOnAndroid_thenWeGetAndroidMainThreadExecutor() {
+    fun whenDoesNotHaveWorkingAndroidMainLooper_thenWeDoNotGetAndroidMainThreadExecutor() {
         assertThat(MainThread.singletonExecutor())
             .isNotInstanceOf(AndroidMainThreadExecutor::class.java)
     }
 
     @Test
-    fun whenOnAndroid_thenIsAndroidShouldBeTrue() {
+    fun whenDoesNotHaveWorkingAndroidMainLooper_thenHasWorkingAndroidMainLooperShouldBeFalse() {
         assertThat(hasWorkingAndroidMainLooper()).isFalse()
     }
 }

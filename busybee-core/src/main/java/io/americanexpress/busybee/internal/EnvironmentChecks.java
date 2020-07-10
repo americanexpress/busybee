@@ -38,7 +38,8 @@ public class EnvironmentChecks {
         return junit4IsPresent() || androidJunitRunnerIsPresent();
     }
 
-    private static boolean junit4IsPresent() {
+    @VisibleForTesting
+    static boolean junit4IsPresent() {
         return Reflection.classIsFound("org.junit.runners.JUnit4");
     }
 
