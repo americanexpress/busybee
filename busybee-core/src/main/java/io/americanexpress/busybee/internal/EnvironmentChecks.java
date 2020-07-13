@@ -16,7 +16,6 @@ package io.americanexpress.busybee.internal;
 
 import androidx.annotation.VisibleForTesting;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeoutException;
@@ -51,19 +50,24 @@ public class EnvironmentChecks {
     // can't reference Android types directly, so have to use raw types.
     @SuppressWarnings({"rawtypes"})
     static boolean hasWorkingAndroidMainLooper() {
-        Class looperClass = clazz("android.os.Looper");
-        Object mainLooper;
+        FutureTask<Boolean> runnable;
         try {
+            Object mainLooper;
+            Class looperClass = clazz("android.os.Looper");
             mainLooper = invokeStaticMethod(looperClass, "getMainLooper");
-        } catch (InvocationTargetException e) {
-            return false;
+            Class handlerClass = clazz("android.os.Handler");
+            Object handler = Reflection.invokeConstructor(handlerClass, looperClass, mainLooper);
+            runnable = new FutureTask<>(() -> true);
+            invokeMethod(handler, "postAtFrontOfQueue", new Class[]{Runnable.class}, new Object[]{runnable});
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof ReflectiveOperationException) {
+                // something that we needed doesn't exist, so Android Main Looper won't work
+                return false;
+            }
+            throw e;
         }
-        Class handlerClass = clazz("android.os.Handler");
-        Object handler = Reflection.invokeConstructor(handlerClass, looperClass, mainLooper);
-        FutureTask<Boolean> runnable = new FutureTask<>(() -> true);
-        invokeMethod(handler, "postAtFrontOfQueue", new Class[]{Runnable.class}, new Object[]{runnable});
         try {
-            return runnable.get(2, SECONDS);
+            return runnable.get(5, SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             return false;
         }

@@ -39,10 +39,10 @@ class Reflection {
         }
     }
 
-    static Object invokeStaticMethod(Class<?> clazz, String methodName) throws InvocationTargetException {
+    static Object invokeStaticMethod(Class<?> clazz, String methodName) {
         try {
             return clazz.getMethod(methodName).invoke(null);
-        } catch (NoSuchMethodException | IllegalAccessException e) {
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
