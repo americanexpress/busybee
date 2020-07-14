@@ -1,0 +1,70 @@
+version: 2.1
+
+executors:
+  android-api29:
+    docker:
+      # https://hub.docker.com/layers/circleci/android/api-29/images/sha256-2f83a26e7d875a74c2fd4edb643168654bc8028a258bcc71a6bfd1ea26580f82?context=explore
+      - image: circleci/android@sha256:2f83a26e7d875a74c2fd4edb643168654bc8028a258bcc71a6bfd1ea26580f82
+
+anchors:
+  - &common_job_config
+    executor: android-api29
+
+
+jobs:
+  test:
+    <<: *common_job_config
+    steps:
+      # TODO: need to merge with destination branch before building
+      - checkout
+      - run:
+          name: gradle test
+          command: ./gradlew cleanTest test --stacktrace
+
+  publish-snapshot:
+    <<: *common_job_config
+    steps:
+      - checkout
+      - run:
+          name: Publish -SNAPSHOT
+          command: MAVEN_REPO_URL="https://oss.jfrog.org/artifactory/oss-snapshot-local/" ./gradlew build publish --stacktrace
+
+  publish-release:
+    <<: *common_job_config
+    steps:
+      - checkout
+      - run:
+          name: Publish Release
+          command: MAVEN_REPO_URL="https://api.bintray.com/maven/americanexpress/maven/io.americanexpress.busybee/;publish=0" ./gradlew build publish -Dsnapshot=false --stacktrace
+
+
+workflows_setup:
+  - &context
+    context: gradle
+
+workflows:
+  pull_request_workflow:
+    jobs:
+      - test
+
+  default_branch_workflow:
+    when:
+      # TODO: publish -SNAPSHOT for branches with branch name in the version
+      equal: [ master, << pipeline.git.branch >> ]
+    jobs:
+      - test
+      - publish-snapshot:
+          <<: [ *context ]
+          requires:
+            - test
+
+
+  publish_release:
+    jobs:
+      - publish-release:
+          <<: [ *context ]
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+/
+            branches:
+              ignore: /.*/
