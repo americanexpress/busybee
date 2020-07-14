@@ -15,19 +15,19 @@
 package io.americanexpress.busybee.internal
 
 import io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor
-import io.americanexpress.busybee.internal.EnvironmentChecks.isAndroid
+import io.americanexpress.busybee.internal.EnvironmentChecks.hasWorkingAndroidMainLooper
 import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Test
 
 class AndroidMainThreadExecutorTest {
     @Test
-    fun whenOnAndroid_thenWeGetAndroidMainThreadExecutor() {
+    fun whenHasWorkingAndroidMainLooper_thenWeGetAndroidMainThreadExecutor() {
         assertThat(MainThread.singletonExecutor())
             .isInstanceOf(AndroidMainThreadExecutor::class.java)
     }
 
     @Test
-    fun whenOnAndroid_thenIsAndroidShouldBeTrue() {
-        assertThat(isAndroid()).isTrue()
+    fun whenHasWorkingAndroidMainLooper_thenIsAndroidShouldBeTrue() {
+        assertThat(hasWorkingAndroidMainLooper()).isTrue()
     }
 }

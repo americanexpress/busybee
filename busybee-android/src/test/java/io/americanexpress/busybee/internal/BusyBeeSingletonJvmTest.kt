@@ -19,20 +19,20 @@ import io.americanexpress.busybee.internal.EnvironmentChecks.junit4IsPresent
 import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Test
 
-class BusyBeeSingletonTest {
+class BusyBeeSingletonJvmTest {
 
     @Test
-    fun whenTestsAreRunning_thenWeDetectJunit4() {
+    fun whenJunit4IsUsed_thenWeDetectItsPresence() {
         assertThat(junit4IsPresent())
-            .`as`("We are running tests, so this should be true")
+            .`as`("We are running Junit4 tests, so this should be true")
             .isTrue()
     }
 
     @Test
-    fun whenInAndroidTests_thenWeDetectItsAndroidRunner() {
+    fun whenRunningJvmTestsWithoutEspresso_thenWeDontDetectIt() {
         assertThat(androidJunitRunnerIsPresent())
-            .`as`("We are running /androidTest, so this should be true")
-            .isTrue()
+            .`as`("We are in /test without espresso, so this should be false")
+            .isFalse()
     }
 
     @Test

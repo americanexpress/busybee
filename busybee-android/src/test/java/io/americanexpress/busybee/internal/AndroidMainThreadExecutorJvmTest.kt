@@ -14,25 +14,20 @@
 
 package io.americanexpress.busybee.internal
 
-import io.americanexpress.busybee.internal.EnvironmentChecks.androidJunitRunnerIsPresent
+import io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor
 import io.americanexpress.busybee.internal.EnvironmentChecks.hasWorkingAndroidMainLooper
-import io.americanexpress.busybee.internal.EnvironmentChecks.testsAreRunning
 import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Test
 
-class EnvironmentChecksTest {
+class AndroidMainThreadExecutorJvmTest {
     @Test
-    fun testsAreRunningShouldAlwaysBeTrueInATest() {
-        assertThat(testsAreRunning()).isTrue()
+    fun whenDoesNotHaveWorkingAndroidMainLooper_thenWeDoNotGetAndroidMainThreadExecutor() {
+        assertThat(MainThread.singletonExecutor())
+            .isNotInstanceOf(AndroidMainThreadExecutor::class.java)
     }
 
     @Test
-    fun whenInNonAndroidModule_thenEspressoIdlingResourceIsPresentIsFalse() {
-        assertThat(androidJunitRunnerIsPresent()).isFalse()
-    }
-
-    @Test
-    fun whenInNonAndroidModule_thenIsAndroidReturnsFalse() {
+    fun whenDoesNotHaveWorkingAndroidMainLooper_thenHasWorkingAndroidMainLooperShouldBeFalse() {
         assertThat(hasWorkingAndroidMainLooper()).isFalse()
     }
 }
