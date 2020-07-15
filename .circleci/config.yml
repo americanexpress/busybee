@@ -42,15 +42,21 @@ workflows_setup:
   - &context
     context: gradle
 
+  - &default_branch
+      "master"
+
 workflows:
   pull_request_workflow:
     jobs:
-      - test
+      - test:
+          filters:
+            branches:
+              ignore: *default_branch
 
   default_branch_workflow:
     when:
       # TODO: publish -SNAPSHOT for branches with branch name in the version
-      equal: [ master, << pipeline.git.branch >> ]
+      equal: [ *default_branch, << pipeline.git.branch >> ]
     jobs:
       - test
       - publish-snapshot:
