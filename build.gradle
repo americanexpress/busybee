@@ -90,6 +90,11 @@ subprojects {
         if (plugins.hasPlugin('com.android.library')
                 || plugins.hasPlugin('com.android.application')) {
             android {
+
+                lintOptions {
+                    disable "GradleDependency"
+                }
+
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_1_8
                     targetCompatibility JavaVersion.VERSION_1_8
