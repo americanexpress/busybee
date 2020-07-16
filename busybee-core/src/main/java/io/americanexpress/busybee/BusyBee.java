@@ -22,9 +22,11 @@ public interface BusyBee {
 
     /**
      * Generally, you want just one instance of BusyBee for your whole process.
-     *
+     * <p>
      * For release apps with no tests running, this will return a instance of BusyBee
      * that does nothing, so there is minimal overhead for your release builds.
+     *
+     * @return the single global instance of BusyBee
      */
     static @NonNull
     BusyBee singleton() {
@@ -52,6 +54,7 @@ public interface BusyBee {
      * Record the start of an async operation.
      *
      * @param operation An object that identifies the request. Must have a correct equals()/hashCode().
+     * @param category Which {@link Category} the given operation will be associated with
      */
     void busyWith(@NonNull Object operation, @NonNull BusyBee.Category category);
 
