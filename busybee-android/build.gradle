@@ -45,7 +45,6 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "androidx.test.espresso:espresso-idling-resource:${deps.androidx.test.espresso.idling_resource}"
-    implementation "androidx.annotation:annotation:${deps.androidx.annotation}"
 
     androidTestImplementation "org.assertj:assertj-core:${deps.assertj}"
     androidTestImplementation "junit:junit:${deps.junit}"
