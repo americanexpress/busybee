@@ -11,38 +11,26 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.americanexpress.busybee.android.internal;
+package io.americanexpress.busybee.android.internal
 
-import androidx.test.espresso.IdlingResource;
-
-import io.americanexpress.busybee.BusyBee;
+import androidx.test.espresso.IdlingResource
+import androidx.test.espresso.IdlingResource.ResourceCallback
+import io.americanexpress.busybee.BusyBee
 
 /**
  * This class is a bridge between espresso's IdlingResource and the app, so the app doesn't have to depend on espresso.
- * <p>
+ *
+ *
  * You must register it with Espresso:
  * `IdlingRegistry.getInstance().register(new BusyBeeIdlingResource(BusyBee.singleton()));`
  */
-public class BusyBeeIdlingResource implements IdlingResource {
+class BusyBeeIdlingResource internal constructor(private val busyBee: BusyBee) : IdlingResource {
+    override fun getName() = busyBee.name
 
-    private final BusyBee busyBee;
+    override fun isIdleNow() = busyBee.isNotBusy
 
-    BusyBeeIdlingResource(final BusyBee busyBee) {
-        this.busyBee = busyBee;
+    override fun registerIdleTransitionCallback(resourceCallback: ResourceCallback) {
+        busyBee.registerNoLongerBusyCallback { resourceCallback.onTransitionToIdle() }
     }
 
-    @Override
-    public String getName() {
-        return busyBee.getName();
-    }
-
-    @Override
-    public boolean isIdleNow() {
-        return busyBee.isNotBusy();
-    }
-
-    @Override
-    public void registerIdleTransitionCallback(final ResourceCallback resourceCallback) {
-        busyBee.registerNoLongerBusyCallback(resourceCallback::onTransitionToIdle);
-    }
 }

@@ -11,23 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.americanexpress.busybee.android.internal;
+package io.americanexpress.busybee.android.internal
 
-import android.os.Handler;
-import android.os.Looper;
+import android.os.Handler
+import android.os.Looper
+import java.util.concurrent.Executor
 
-import androidx.annotation.NonNull;
-
-import java.util.concurrent.Executor;
-
-public enum AndroidMainThreadExecutor implements Executor {
+enum class AndroidMainThreadExecutor : Executor {
     // accessed via reflection in busybee-core
     INSTANCE;
 
-    private final Handler handler = new Handler(Looper.getMainLooper());
-
-    @Override
-    public void execute(@NonNull final Runnable command) {
-        handler.post(command);
+    private val handler = Handler(Looper.getMainLooper())
+    override fun execute(command: Runnable) {
+        handler.post(command)
     }
 }
