@@ -38,7 +38,7 @@ subprojects {
     ext.deps = [targetSdk : 29,
                 compileSdk: 29,
                 minSdk    : 19,
-                junit     : '4.12',
+                junit     : '4.13.1',
                 assertj   : '2.6.0',
                 mockito2  : '3.0.0',
                 androidx  : [
