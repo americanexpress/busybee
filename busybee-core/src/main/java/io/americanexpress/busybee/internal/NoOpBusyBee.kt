@@ -11,76 +11,36 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import androidx.annotation.NonNull;
-
-import io.americanexpress.busybee.BusyBee;
+import io.americanexpress.busybee.BusyBee
+import io.americanexpress.busybee.BusyBee.NoLongerBusyCallback
+import io.americanexpress.busybee.BusyBee.OperationMatcher
 
 /**
  * This is a version of BusyBee that is used when the tests are not running.
  * It does nothing.
  * This minimizes the overhead of having BusyBee in your app.
  */
-public class NoOpBusyBee implements BusyBee {
-    NoOpBusyBee() {
-    }
+class NoOpBusyBee internal constructor() : BusyBee {
+    override val name: String
+        get() = "NO-OP BusyBee"
 
-    @NonNull
-    @Override
-    public String getName() {
-        return "NO-OP BusyBee";
-    }
+    override fun busyWith(operation: Any) {}
+    override fun busyWith(operation: Any, category: BusyBee.Category) {}
+    override fun registerNoLongerBusyCallback(noLongerBusyCallback: NoLongerBusyCallback) {}
+    override fun payAttentionToCategory(category: BusyBee.Category) {}
+    override fun ignoreCategory(category: BusyBee.Category) {}
+    override fun completedEverythingInCategory(category: BusyBee.Category) {}
+    override fun completedEverything() {}
+    override fun completedEverythingMatching(matcher: OperationMatcher) {}
+    override fun completed(operation: Any) {}
+    override val isNotBusy: Boolean
+        get() = true
+    override val isBusy: Boolean
+        get() = false
 
-    @Override
-    public void busyWith(@NonNull Object operation) {
-    }
-
-    @Override
-    public void busyWith(@NonNull Object operation, @NonNull final BusyBee.Category category) {
-    }
-
-    @Override
-    public void registerNoLongerBusyCallback(@NonNull final BusyBee.NoLongerBusyCallback noLongerBusyCallback) {
-    }
-
-    @Override
-    public void payAttentionToCategory(@NonNull final BusyBee.Category category) {
-    }
-
-    @Override
-    public void ignoreCategory(@NonNull final BusyBee.Category category) {
-    }
-
-    @Override
-    public void completedEverythingInCategory(@NonNull final BusyBee.Category category) {
-    }
-
-    @Override
-    public void completedEverything() {
-    }
-
-    @Override
-    public void completedEverythingMatching(@NonNull BusyBee.OperationMatcher matcher) {
-    }
-
-    @Override
-    public void completed(@NonNull Object operation) {
-    }
-
-    @Override
-    public boolean isNotBusy() {
-        return true;
-    }
-
-    @Override
-    public boolean isBusy() {
-        return false;
-    }
-
-    @NonNull
-    @Override
-    public String toStringVerbose() {
-        return "NO-OP BusyBee";
+    override fun toStringVerbose(): String {
+        return "NO-OP BusyBee"
     }
 }

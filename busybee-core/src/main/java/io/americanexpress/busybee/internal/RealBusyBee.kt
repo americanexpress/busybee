@@ -11,317 +11,295 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.americanexpress.busybee.internal;
+package io.americanexpress.busybee.internal
 
-import androidx.annotation.GuardedBy;
-import androidx.annotation.NonNull;
-
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Logger;
-
-import io.americanexpress.busybee.BusyBee;
-
-import static io.americanexpress.busybee.BusyBee.Category.defaultCategory;
-import static java.lang.String.format;
-import static java.lang.System.identityHashCode;
-import static java.util.Locale.US;
+import androidx.annotation.GuardedBy
+import io.americanexpress.busybee.BusyBee
+import io.americanexpress.busybee.BusyBee.NoLongerBusyCallback
+import io.americanexpress.busybee.BusyBee.OperationMatcher
+import java.util.ArrayList
+import java.util.EnumSet
+import java.util.Locale
+import java.util.concurrent.Executor
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
+import java.util.logging.Logger
 
 /**
  * This allows the app to let Espresso (test framework) know when it is busy and Espresso should wait.
  * It is not directly tied to Espresso and could be used in any case where you need to know if the app is "busy".
- * <p>
+ *
+ *
  * Call busyWith when you start being "busy"
  * Call completed when you stop being "busy" and start being "idle".
- * <p>
+ *
+ *
  * Generally, you should call completed from a finally block.
- * <p>
+ *
+ *
  * Espresso will wait for the app to be "idle" (i.e. not busy).
- * <p>
+ *
+ *
  * Proper use of the BusyBee will avoid having to "wait" or "sleep" in tests.
  * BE SURE NOT BE "BUSY" LONGER THAN NECESSARY, otherwise it will slow down your tests.
  */
-public class RealBusyBee implements BusyBee {
-    private static final Logger log = Logger.getLogger("io.americanexpress.busybee");
+class RealBusyBee(private val completedOnThread: Executor?) : BusyBee {
+    @GuardedBy("lock")
+    private val operationsInProgress = SetMultiMap<BusyBee.Category, Any>()
 
     @GuardedBy("lock")
-    private final SetMultiMap<Category, Object> operationsInProgress = new SetMultiMap<>();
+    private val currentlyTrackedCategories = EnumSet.allOf(
+        BusyBee.Category::class.java
+    )
+
     @GuardedBy("lock")
-    private final EnumSet<Category> currentlyTrackedCategories = EnumSet.allOf(Category.class);
-    @GuardedBy("lock")
-    private final List<NoLongerBusyCallback> noLongerBusyCallbacks = new ArrayList<>(1); // Espresso use case will only have 1 callback
-
-    private final Lock lock = new ReentrantLock();
-    private final Category defaultCategory = defaultCategory();
-    private final Executor completedOnThread;
-
-    public RealBusyBee(Executor completedOnThread) {
-        this.completedOnThread = completedOnThread;
-    }
-
-
-    @NonNull
-    @Override
-    public String getName() {
-        lock.lock();
-        try {
-            return format(US, this.getClass().getSimpleName() + "@%d with operations: %s",
-                    identityHashCode(this),
-                    operationsInProgress);
-        } finally {
-            lock.unlock();
+    private val noLongerBusyCallbacks: MutableList<NoLongerBusyCallback> =
+        ArrayList(1) // Espresso use case will only have 1 callback
+    private val lock: Lock = ReentrantLock()
+    private val defaultCategory: BusyBee.Category = BusyBee.Category.Companion.defaultCategory()
+    override val name: String
+        get() {
+            lock.lock()
+            return try {
+                String.format(
+                    Locale.US, this.javaClass.simpleName + "@%d with operations: %s",
+                    System.identityHashCode(this),
+                    operationsInProgress
+                )
+            } finally {
+                lock.unlock()
+            }
         }
+
+    override fun busyWith(operation: Any) {
+        busyWith(operation, defaultCategory)
     }
 
-    @Override
-    public void busyWith(@NonNull Object operation) {
-        busyWith(operation, defaultCategory);
-    }
-
-    @Override
-    public void busyWith(@NonNull Object operation, @NonNull final Category category) {
-        //noinspection ConstantConditions
+    override fun busyWith(operation: Any, category: BusyBee.Category) {
         if (operation == null) {
-            throw new NullPointerException("Can not be `busyWith` null, operation must be non-null");
+            throw NullPointerException("Can not be `busyWith` null, operation must be non-null")
         }
-        lock.lock();
-        boolean wasAdded;
+        lock.lock()
+        val wasAdded: Boolean
         try {
-            wasAdded = operationsInProgress.add(category, operation);
+            wasAdded = operationsInProgress.add(category, operation)
             if (wasAdded) {
-                log.info("busyWith -> [" + operation + "] was added to active operations in category " + category);
+                log.info("busyWith -> [$operation] was added to active operations in category $category")
             }
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    @Override
-    public void registerNoLongerBusyCallback(@NonNull final NoLongerBusyCallback noLongerBusyCallback) {
-        lock.lock();
+    override fun registerNoLongerBusyCallback(noLongerBusyCallback: NoLongerBusyCallback) {
+        lock.lock()
         try {
-            noLongerBusyCallbacks.add(noLongerBusyCallback);
+            noLongerBusyCallbacks.add(noLongerBusyCallback)
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    @Override
-    public void payAttentionToCategory(@NonNull final Category category) {
-        lock.lock();
+    override fun payAttentionToCategory(category: BusyBee.Category) {
+        lock.lock()
         try {
-            log.info("Paying attention to category: " + category);
-            currentlyTrackedCategories.add(category);
+            log.info("Paying attention to category: $category")
+            currentlyTrackedCategories.add(category)
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    @Override
-    public void ignoreCategory(@NonNull final Category category) {
-        lock.lock();
+    override fun ignoreCategory(category: BusyBee.Category) {
+        lock.lock()
         try {
-            log.info("Ignoring category: " + category);
-            final boolean wasBusyBefore = isBusy();
-            final boolean wasRemoved = currentlyTrackedCategories.remove(category);
-            final boolean notBusyNow = isNotBusy();
+            log.info("Ignoring category: $category")
+            val wasBusyBefore = isBusy
+            val wasRemoved = currentlyTrackedCategories.remove(category)
+            val notBusyNow = isNotBusy
             if (wasRemoved && wasBusyBefore && notBusyNow) {
-                notifyNoLongerBusyCallbacks();
+                notifyNoLongerBusyCallbacks()
             }
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    @Override
-    public void completedEverythingInCategory(@NonNull final Category category) {
-        completedOnThread.execute(new Runnable() {
-            @Override
-            public void run() {
-                lock.lock();
+    override fun completedEverythingInCategory(category: BusyBee.Category) {
+        completedOnThread!!.execute(object : Runnable {
+            override fun run() {
+                lock.lock()
                 try {
-                    for (Iterator<Object> iterator = operationsInProgress.valuesIterator(category); iterator.hasNext(); ) {
-                        Object next = iterator.next();
-                        completeOnCurrentThread(next, iterator);
+                    val iterator = operationsInProgress.valuesIterator(category)
+                    while (iterator.hasNext()) {
+                        val next = iterator.next()
+                        completeOnCurrentThread(next, iterator)
                     }
                 } finally {
-                    lock.unlock();
+                    lock.unlock()
                 }
             }
 
-            @Override
-            public String toString() {
-                return "completedEverythingInCategory(" + category.toString() + ")";
+            override fun toString(): String {
+                return "completedEverythingInCategory($category)"
             }
-        });
+        })
     }
 
-    @Override
-    public void completedEverything() {
-        completedOnThread.execute(new Runnable() {
-            @Override
-            public void run() {
-                lock.lock();
+    override fun completedEverything() {
+        completedOnThread!!.execute(object : Runnable {
+            override fun run() {
+                lock.lock()
                 try {
-                    for (Iterator<Object> iterator = operationsInProgress.valuesIterator(); iterator.hasNext(); ) {
-                        Object next = iterator.next();
-                        completeOnCurrentThread(next, iterator);
+                    val iterator = operationsInProgress.valuesIterator()
+                    while (iterator.hasNext()) {
+                        val next = iterator.next()
+                        completeOnCurrentThread(next, iterator)
                     }
                 } finally {
-                    lock.unlock();
+                    lock.unlock()
                 }
             }
 
-            @Override
-            public String toString() {
-                return "completedEverything()";
+            override fun toString(): String {
+                return "completedEverything()"
             }
-        });
+        })
     }
 
-    @Override
-    public void completedEverythingMatching(@NonNull OperationMatcher matcher) {
-        completedOnThread.execute(new Runnable() {
-            @Override
-            public void run() {
-                lock.lock();
+    override fun completedEverythingMatching(matcher: OperationMatcher) {
+        completedOnThread!!.execute(object : Runnable {
+            override fun run() {
+                lock.lock()
                 try {
-                    for (Iterator<Object> iterator = operationsInProgress.valuesIterator(); iterator.hasNext(); ) {
-                        Object next = iterator.next();
+                    val iterator = operationsInProgress.valuesIterator()
+                    while (iterator.hasNext()) {
+                        val next = iterator.next()
                         if (matcher.matches(next)) {
-                            completeOnCurrentThread(next, iterator);
+                            completeOnCurrentThread(next, iterator)
                         }
                     }
                 } finally {
-                    lock.unlock();
+                    lock.unlock()
                 }
             }
 
-            @Override
-            public String toString() {
-                return "completedEverythingMatching(" + matcher.toString() + ")";
+            override fun toString(): String {
+                return "completedEverythingMatching($matcher)"
             }
-        });
+        })
     }
 
-    @Override
-    public void completed(@NonNull final Object operation) {
-        completedOnThread.execute(new Runnable() {
-            @Override
-            public void run() {
-                completeOnCurrentThread(operation, null);
+    override fun completed(operation: Any) {
+        completedOnThread!!.execute(object : Runnable {
+            override fun run() {
+                completeOnCurrentThread(operation, null)
             }
 
-            @Override
-            public String toString() {
-                return "completed(" + operation.toString() + ")";
+            override fun toString(): String {
+                return "completed($operation)"
             }
-        });
+        })
     }
 
     /**
      * Precondition: Iterator must be pointing to the operation passed in (or iterator must be null).
-     * <p>
+     *
+     *
      * This method "completes" the operation on the current thread.
      *
      * @param operation the operation to be completed
      * @param iterator  must be pointing to operation
      */
-    private void completeOnCurrentThread(Object operation, Iterator<Object> iterator) {
+    private fun completeOnCurrentThread(operation: Any?, iterator: MutableIterator<Any?>?) {
         if (operation == null) {
-            throw new NullPointerException("null can not be `completed` null, operation must be non-null");
+            throw NullPointerException("null can not be `completed` null, operation must be non-null")
         }
-        lock.lock();
-        boolean wasRemoved;
+        lock.lock()
+        val wasRemoved: Boolean
         try {
-            if (iterator != null) {
+            wasRemoved = if (iterator != null) {
                 // if the collection is being iterated,
                 // then we HAVE to use the iterator for removal to avoid ConcurrentModificationException
-                iterator.remove();
-                wasRemoved = true;
+                iterator.remove()
+                true
             } else {
-                wasRemoved = operationsInProgress.removeValue(operation);
+                operationsInProgress.removeValue(operation)
             }
             if (wasRemoved) {
-                log.info("completed -> [" + operation + "] was removed from active operations");
+                log.info("completed -> [$operation] was removed from active operations")
             }
-            if (wasRemoved && isNotBusy()) {
-                notifyNoLongerBusyCallbacks();
+            if (wasRemoved && isNotBusy) {
+                notifyNoLongerBusyCallbacks()
             }
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    private void notifyNoLongerBusyCallbacks() {
-        for (NoLongerBusyCallback noLongerBusyCallback : noLongerBusyCallbacks) {
-            log.info("All operations are now finished, we are now idle");
-            noLongerBusyCallback.noLongerBusy();
+    private fun notifyNoLongerBusyCallbacks() {
+        for (noLongerBusyCallback in noLongerBusyCallbacks) {
+            log.info("All operations are now finished, we are now idle")
+            noLongerBusyCallback.noLongerBusy()
         }
     }
 
-    @Override
-    public boolean isNotBusy() {
-        lock.lock();
-        try {
-            for (Category category : currentlyTrackedCategories) {
-                if (isBusyWithAnythingIn(category)) {
-                    return false;
-                }
-            }
-            return true;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public boolean isBusy() {
-        return !isNotBusy();
-    }
-
-    private boolean isBusyWithAnythingIn(final Category category) {
-        lock.lock();
-        try {
-            return !operationsInProgress.values(category).isEmpty();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @NonNull
-    @Override
-    public String toStringVerbose() {
-        try {
-            lock.lock();
-            SetMultiMap<Category, Object> operations = operationsInProgress;
-            StringBuilder sb = new StringBuilder()
-                    .append("\n***********************")
-                    .append("\n**BusyBee Information**")
-                    .append("\n***********************");
-            try {
-                sb.append("\nTotal Operations:")
-                        .append(operations.allValues().size())
-                        .append("\nList of operations in progress:")
-                        .append("\n****************************");
-                for (Category category : operations.allKeys()) {
-                    sb.append("\nCATEGORY: ======= ").append(category.name()).append(" =======");
-                    for (Object operation : operations.values(category)) {
-                        sb.append("\n").append(operation.toString());
+    override val isNotBusy: Boolean
+        get() {
+            lock.lock()
+            return try {
+                for (category in currentlyTrackedCategories) {
+                    if (isBusyWithAnythingIn(category)) {
+                        return false
                     }
                 }
-            } catch (Exception e) {
-                sb.append(e.getMessage());
-                sb.append("\n****!!!!FAILED TO GET LIST OF IN PROGRESS OPERATIONS!!!!****");
+                true
+            } finally {
+                lock.unlock()
             }
-            return sb.append("\n****************************\n").toString();
-        } finally {
-            lock.unlock();
         }
+    override val isBusy: Boolean
+        get() = !isNotBusy
+
+    private fun isBusyWithAnythingIn(category: BusyBee.Category): Boolean {
+        lock.lock()
+        return try {
+            !operationsInProgress.values(category).isEmpty()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun toStringVerbose(): String {
+        return try {
+            lock.lock()
+            val operations = operationsInProgress
+            val sb = StringBuilder()
+                .append("\n***********************")
+                .append("\n**BusyBee Information**")
+                .append("\n***********************")
+            try {
+                sb.append("\nTotal Operations:")
+                    .append(operations.allValues().size)
+                    .append("\nList of operations in progress:")
+                    .append("\n****************************")
+                for (category in operations.allKeys()) {
+                    sb.append("\nCATEGORY: ======= ").append(category.name).append(" =======")
+                    for (operation in operations.values(category)) {
+                        sb.append("\n").append(operation.toString())
+                    }
+                }
+            } catch (e: Exception) {
+                sb.append(e.message)
+                sb.append("\n****!!!!FAILED TO GET LIST OF IN PROGRESS OPERATIONS!!!!****")
+            }
+            sb.append("\n****************************\n").toString()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    companion object {
+        private val log = Logger.getLogger("io.americanexpress.busybee")
     }
 }

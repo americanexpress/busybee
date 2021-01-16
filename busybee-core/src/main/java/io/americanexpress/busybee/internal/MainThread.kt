@@ -11,47 +11,42 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+package io.americanexpress.busybee.internal
 
-package io.americanexpress.busybee.internal;
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
-import java.lang.reflect.Field;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import static io.americanexpress.busybee.internal.EnvironmentChecks.hasWorkingAndroidMainLooper;
-import static io.americanexpress.busybee.internal.Reflection.clazz;
-
-public class MainThread {
+object MainThread {
     // Double check locking https://errorprone.info/bugpattern/DoubleCheckedLocking
-    private static volatile Executor INSTANCE;
-
-    private static Executor jvmExecutor() {
-        Executor instance = INSTANCE;
+    @Volatile
+    private var INSTANCE: Executor? = null
+    private fun jvmExecutor(): Executor? {
+        var instance = INSTANCE
         if (instance == null) {
-            synchronized (MainThread.class) {
-                instance = INSTANCE;
+            synchronized(MainThread::class.java) {
+                instance = INSTANCE
                 if (instance == null) {
-                    INSTANCE = Executors.newSingleThreadExecutor();
+                    INSTANCE = Executors.newSingleThreadExecutor()
                 }
             }
         }
-        return INSTANCE;
+        return INSTANCE
     }
 
-    static Executor singletonExecutor() {
+    fun singletonExecutor(): Executor? {
         /*
          * Can only load AndroidMainThreadExecutor if we are on Android (not JVM)
          * else will we get class not found errors.
          */
-        if (hasWorkingAndroidMainLooper()) {
-            Class<?> androidExecutorClass
-                    = clazz("io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor",
-                    "Must add busybee-android dependency when running on Android");
-            Field instance = Reflection.getField(androidExecutorClass, "INSTANCE");
-            return (Executor) Reflection.getValue(instance);
+        return if (EnvironmentChecks.hasWorkingAndroidMainLooper()) {
+            val androidExecutorClass = Reflection.clazz(
+                "io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor",
+                "Must add busybee-android dependency when running on Android"
+            )
+            val instance = Reflection.getField(androidExecutorClass, "INSTANCE")
+            Reflection.getValue(instance) as Executor
         } else {
-            return jvmExecutor();
+            jvmExecutor()
         }
     }
-
 }

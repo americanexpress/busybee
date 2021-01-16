@@ -11,75 +11,73 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+package io.americanexpress.busybee.internal
 
-package io.americanexpress.busybee.internal;
+import androidx.annotation.VisibleForTesting
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
-import androidx.annotation.VisibleForTesting;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeoutException;
-
-import static io.americanexpress.busybee.internal.Reflection.clazz;
-import static io.americanexpress.busybee.internal.Reflection.invokeMethod;
-import static io.americanexpress.busybee.internal.Reflection.invokeStaticMethod;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-public class EnvironmentChecks {
-
+object EnvironmentChecks {
     @VisibleForTesting
-    private static boolean pretendTestsAreNotRunning = false;
-
-    public static boolean testsAreRunning() {
-        if (pretendTestsAreNotRunning) return false;
+    private var pretendTestsAreNotRunning = false
+    fun testsAreRunning(): Boolean {
+        return if (pretendTestsAreNotRunning) false else junit4IsPresent() || androidJunitRunnerIsPresent()
 
         // may want to add TestNG or Junit5 support at some point.
-        return junit4IsPresent() || androidJunitRunnerIsPresent();
     }
 
     @VisibleForTesting
-    static boolean junit4IsPresent() {
-        return Reflection.classIsFound("org.junit.runners.JUnit4");
+    fun junit4IsPresent(): Boolean {
+        return Reflection.classIsFound("org.junit.runners.JUnit4")
     }
 
     @VisibleForTesting
-    static boolean androidJunitRunnerIsPresent() {
-        return Reflection.classIsFound("androidx.test.runner.AndroidJUnitRunner");
+    fun androidJunitRunnerIsPresent(): Boolean {
+        return Reflection.classIsFound("androidx.test.runner.AndroidJUnitRunner")
     }
 
     // can't reference Android types directly, so have to use raw types.
-    @SuppressWarnings({"rawtypes"})
-    static boolean hasWorkingAndroidMainLooper() {
-        FutureTask<Boolean> runnable;
+    fun hasWorkingAndroidMainLooper(): Boolean {
+        val runnable: FutureTask<Boolean>
         try {
-            Object mainLooper;
-            Class looperClass = clazz("android.os.Looper");
-            mainLooper = invokeStaticMethod(looperClass, "getMainLooper");
-            Class handlerClass = clazz("android.os.Handler");
-            Object handler = Reflection.invokeConstructor(handlerClass, looperClass, mainLooper);
-            runnable = new FutureTask<>(() -> true);
-            invokeMethod(handler, "postAtFrontOfQueue", new Class[]{Runnable.class}, new Object[]{runnable});
-        } catch (RuntimeException e) {
-            if (e.getCause() instanceof ReflectiveOperationException) {
+            val mainLooper: Any?
+            val looperClass: Class<*> = clazz("android.os.Looper")
+            mainLooper = Reflection.invokeStaticMethod(looperClass, "getMainLooper")
+            val handlerClass: Class<*> = clazz("android.os.Handler")
+            val handler = Reflection.invokeConstructor(handlerClass, looperClass, mainLooper)
+            runnable = FutureTask { true }
+            Reflection.invokeMethod(
+                handler, "postAtFrontOfQueue", arrayOf<Class<*>?>(
+                    Runnable::class.java
+                ), arrayOf<Any>(runnable)
+            )
+        } catch (e: RuntimeException) {
+            if (e.cause is ReflectiveOperationException) {
                 // something that we needed doesn't exist, so Android Main Looper won't work
-                return false;
+                return false
             }
-            throw e;
+            throw e
         }
-        try {
-            return runnable.get(5, SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            return false;
+        return try {
+            runnable[5, TimeUnit.SECONDS]
+        } catch (e: InterruptedException) {
+            false
+        } catch (e: ExecutionException) {
+            false
+        } catch (e: TimeoutException) {
+            false
         }
     }
 
     @VisibleForTesting
-    static void pretendTestsAreNotRunning() {
-        pretendTestsAreNotRunning = true;
+    fun pretendTestsAreNotRunning() {
+        pretendTestsAreNotRunning = true
     }
 
     @VisibleForTesting
-    static void doNotPretendTestsAreNotRunning() {
-        pretendTestsAreNotRunning = false;
+    fun doNotPretendTestsAreNotRunning() {
+        pretendTestsAreNotRunning = false
     }
 }

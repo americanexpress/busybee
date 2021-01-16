@@ -11,28 +11,23 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+package io.americanexpress.busybee.internal
 
-package io.americanexpress.busybee.internal;
+import androidx.annotation.VisibleForTesting
+import io.americanexpress.busybee.BusyBee
 
-import androidx.annotation.VisibleForTesting;
-
-import io.americanexpress.busybee.BusyBee;
-
-import static io.americanexpress.busybee.internal.EnvironmentChecks.testsAreRunning;
-
-public class BusyBeeSingleton {
-    private static final BusyBee SINGLETON = create();
-
-    public static BusyBee singleton() {
-        return SINGLETON;
+object BusyBeeSingleton {
+    private val SINGLETON = create()
+    fun singleton(): BusyBee {
+        return SINGLETON
     }
 
     @VisibleForTesting
-    static BusyBee create() {
-        if (testsAreRunning()) {
-            return new RealBusyBee(MainThread.singletonExecutor());
+    fun create(): BusyBee {
+        return if (EnvironmentChecks.testsAreRunning()) {
+            RealBusyBee(MainThread.singletonExecutor())
         } else {
-            return new NoOpBusyBee();
+            NoOpBusyBee()
         }
     }
 }
