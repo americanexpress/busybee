@@ -16,7 +16,7 @@ package io.americanexpress.busybee
 import io.americanexpress.busybee.internal.BusyBeeSingleton
 
 interface BusyBee {
-    val name: String
+    fun getName(): String
 
     /**
      * Tell BusyBee that a new operation is now keeping the app "busy".
@@ -111,7 +111,7 @@ interface BusyBee {
      *
      * @return true if and only if we are not busyWith an
      */
-    val isNotBusy: Boolean
+    fun isNotBusy(): Boolean
 
     /**
      * @return true if and only if there are operations in progress (i.e. `busyWith`) for categories
@@ -119,7 +119,7 @@ interface BusyBee {
      * @see BusyBee.payAttentionToCategory
      * @see BusyBee.ignoreCategory
      */
-    val isBusy: Boolean
+    fun isBusy(): Boolean
 
     /**
      * Dumps the state of this BusyBee instance, that can be used for debugging
@@ -127,14 +127,14 @@ interface BusyBee {
      * @return String with internal state of the BusyBee instance.
      */
     fun toStringVerbose(): String
-    interface NoLongerBusyCallback {
+    fun interface NoLongerBusyCallback {
         /**
          * Called when there are no more operations in progress (that we are paying attention to)
          */
         fun noLongerBusy()
     }
 
-    interface OperationMatcher {
+    fun interface OperationMatcher {
         fun matches(o: Any): Boolean
     }
 

@@ -19,11 +19,11 @@ import io.americanexpress.busybee.BusyBee.NoLongerBusyCallback
 import io.americanexpress.busybee.BusyBee.OperationMatcher
 import java.util.ArrayList
 import java.util.EnumSet
-import java.util.Locale
 import java.util.concurrent.Executor
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import java.util.logging.Logger
+import kotlin.concurrent.withLock
 
 /**
  * This allows the app to let Espresso (test framework) know when it is busy and Espresso should wait.
@@ -43,135 +43,95 @@ import java.util.logging.Logger
  * Proper use of the BusyBee will avoid having to "wait" or "sleep" in tests.
  * BE SURE NOT BE "BUSY" LONGER THAN NECESSARY, otherwise it will slow down your tests.
  */
-class RealBusyBee(private val completedOnThread: Executor?) : BusyBee {
+class RealBusyBee(private val completedOnThread: Executor) : BusyBee {
     @GuardedBy("lock")
     private val operationsInProgress = SetMultiMap<BusyBee.Category, Any>()
 
     @GuardedBy("lock")
-    private val currentlyTrackedCategories = EnumSet.allOf(
-        BusyBee.Category::class.java
-    )
+    private val currentlyTrackedCategories = EnumSet.allOf(BusyBee.Category::class.java)
 
     @GuardedBy("lock")
     private val noLongerBusyCallbacks: MutableList<NoLongerBusyCallback> =
         ArrayList(1) // Espresso use case will only have 1 callback
     private val lock: Lock = ReentrantLock()
-    private val defaultCategory: BusyBee.Category = BusyBee.Category.Companion.defaultCategory()
-    override val name: String
-        get() {
-            lock.lock()
-            return try {
-                String.format(
-                    Locale.US, this.javaClass.simpleName + "@%d with operations: %s",
-                    System.identityHashCode(this),
-                    operationsInProgress
-                )
-            } finally {
-                lock.unlock()
-            }
-        }
+    private val defaultCategory: BusyBee.Category = BusyBee.Category.defaultCategory()
+    override fun getName(): String = lock.withLock {
+        "${this.javaClass.simpleName}@${System.identityHashCode(this)} with operations: $operationsInProgress"
+    }
 
     override fun busyWith(operation: Any) {
         busyWith(operation, defaultCategory)
     }
 
     override fun busyWith(operation: Any, category: BusyBee.Category) {
-        if (operation == null) {
-            throw NullPointerException("Can not be `busyWith` null, operation must be non-null")
-        }
-        lock.lock()
-        val wasAdded: Boolean
-        try {
-            wasAdded = operationsInProgress.add(category, operation)
-            if (wasAdded) {
+        lock.withLock {
+            if (operationsInProgress.add(category, operation)) {
                 log.info("busyWith -> [$operation] was added to active operations in category $category")
             }
-        } finally {
-            lock.unlock()
         }
     }
 
     override fun registerNoLongerBusyCallback(noLongerBusyCallback: NoLongerBusyCallback) {
-        lock.lock()
-        try {
+        lock.withLock {
             noLongerBusyCallbacks.add(noLongerBusyCallback)
-        } finally {
-            lock.unlock()
         }
     }
 
     override fun payAttentionToCategory(category: BusyBee.Category) {
-        lock.lock()
-        try {
+        lock.withLock {
             log.info("Paying attention to category: $category")
             currentlyTrackedCategories.add(category)
-        } finally {
-            lock.unlock()
         }
     }
 
     override fun ignoreCategory(category: BusyBee.Category) {
-        lock.lock()
-        try {
+        lock.withLock {
             log.info("Ignoring category: $category")
-            val wasBusyBefore = isBusy
+            val wasBusyBefore = isBusy()
             val wasRemoved = currentlyTrackedCategories.remove(category)
-            val notBusyNow = isNotBusy
+            val notBusyNow = isNotBusy()
             if (wasRemoved && wasBusyBefore && notBusyNow) {
                 notifyNoLongerBusyCallbacks()
             }
-        } finally {
-            lock.unlock()
         }
     }
 
     override fun completedEverythingInCategory(category: BusyBee.Category) {
-        completedOnThread!!.execute(object : Runnable {
+        completedOnThread.execute(object : Runnable {
             override fun run() {
-                lock.lock()
-                try {
+                lock.withLock {
                     val iterator = operationsInProgress.valuesIterator(category)
                     while (iterator.hasNext()) {
                         val next = iterator.next()
                         completeOnCurrentThread(next, iterator)
                     }
-                } finally {
-                    lock.unlock()
                 }
             }
 
-            override fun toString(): String {
-                return "completedEverythingInCategory($category)"
-            }
+            override fun toString() = "completedEverythingInCategory($category)"
         })
     }
 
     override fun completedEverything() {
-        completedOnThread!!.execute(object : Runnable {
+        completedOnThread.execute(object : Runnable {
             override fun run() {
-                lock.lock()
-                try {
+                lock.withLock {
                     val iterator = operationsInProgress.valuesIterator()
                     while (iterator.hasNext()) {
                         val next = iterator.next()
                         completeOnCurrentThread(next, iterator)
                     }
-                } finally {
-                    lock.unlock()
                 }
             }
 
-            override fun toString(): String {
-                return "completedEverything()"
-            }
+            override fun toString() = "completedEverything()"
         })
     }
 
     override fun completedEverythingMatching(matcher: OperationMatcher) {
-        completedOnThread!!.execute(object : Runnable {
+        completedOnThread.execute(object : Runnable {
             override fun run() {
-                lock.lock()
-                try {
+                lock.withLock {
                     val iterator = operationsInProgress.valuesIterator()
                     while (iterator.hasNext()) {
                         val next = iterator.next()
@@ -179,26 +139,20 @@ class RealBusyBee(private val completedOnThread: Executor?) : BusyBee {
                             completeOnCurrentThread(next, iterator)
                         }
                     }
-                } finally {
-                    lock.unlock()
                 }
             }
 
-            override fun toString(): String {
-                return "completedEverythingMatching($matcher)"
-            }
+            override fun toString() = "completedEverythingMatching($matcher)"
         })
     }
 
     override fun completed(operation: Any) {
-        completedOnThread!!.execute(object : Runnable {
+        completedOnThread.execute(object : Runnable {
             override fun run() {
                 completeOnCurrentThread(operation, null)
             }
 
-            override fun toString(): String {
-                return "completed($operation)"
-            }
+            override fun toString() = "completed($operation)"
         })
     }
 
@@ -211,14 +165,9 @@ class RealBusyBee(private val completedOnThread: Executor?) : BusyBee {
      * @param operation the operation to be completed
      * @param iterator  must be pointing to operation
      */
-    private fun completeOnCurrentThread(operation: Any?, iterator: MutableIterator<Any?>?) {
-        if (operation == null) {
-            throw NullPointerException("null can not be `completed` null, operation must be non-null")
-        }
-        lock.lock()
-        val wasRemoved: Boolean
-        try {
-            wasRemoved = if (iterator != null) {
+    private fun completeOnCurrentThread(operation: Any, iterator: MutableIterator<Any?>?) {
+        lock.withLock {
+            val wasRemoved = if (iterator != null) {
                 // if the collection is being iterated,
                 // then we HAVE to use the iterator for removal to avoid ConcurrentModificationException
                 iterator.remove()
@@ -229,11 +178,9 @@ class RealBusyBee(private val completedOnThread: Executor?) : BusyBee {
             if (wasRemoved) {
                 log.info("completed -> [$operation] was removed from active operations")
             }
-            if (wasRemoved && isNotBusy) {
+            if (wasRemoved && isNotBusy()) {
                 notifyNoLongerBusyCallbacks()
             }
-        } finally {
-            lock.unlock()
         }
     }
 
@@ -244,58 +191,58 @@ class RealBusyBee(private val completedOnThread: Executor?) : BusyBee {
         }
     }
 
-    override val isNotBusy: Boolean
-        get() {
-            lock.lock()
-            return try {
-                for (category in currentlyTrackedCategories) {
-                    if (isBusyWithAnythingIn(category)) {
-                        return false
-                    }
-                }
-                true
-            } finally {
-                lock.unlock()
+    override fun isNotBusy(): Boolean {
+        lock.withLock {
+            for (category in currentlyTrackedCategories) {
+                if (isBusyWithAnythingIn(category)) return false
             }
-        }
-    override val isBusy: Boolean
-        get() = !isNotBusy
-
-    private fun isBusyWithAnythingIn(category: BusyBee.Category): Boolean {
-        lock.lock()
-        return try {
-            !operationsInProgress.values(category).isEmpty()
-        } finally {
-            lock.unlock()
+            return true
         }
     }
 
-    override fun toStringVerbose(): String {
-        return try {
-            lock.lock()
-            val operations = operationsInProgress
-            val sb = StringBuilder()
-                .append("\n***********************")
-                .append("\n**BusyBee Information**")
-                .append("\n***********************")
+    override fun isBusy(): Boolean = !isNotBusy()
+
+    private fun isBusyWithAnythingIn(category: BusyBee.Category) = lock.withLock {
+        operationsInProgress.values(category).isNotEmpty()
+    }
+
+    override fun toStringVerbose(): String = lock.withLock {
+        val operations = operationsInProgress
+        buildString {
+            appendLine(
+                """
+                ***********************
+                **BusyBee Information**
+                ***********************
+                """.trimIndent()
+            )
             try {
-                sb.append("\nTotal Operations:")
-                    .append(operations.allValues().size)
-                    .append("\nList of operations in progress:")
-                    .append("\n****************************")
+                appendLine(
+                    """
+                    Total Operations: ${operations.allValues().size}
+                    List of operations in progress:
+                    ****************************
+                    """.trimIndent()
+                )
                 for (category in operations.allKeys()) {
-                    sb.append("\nCATEGORY: ======= ").append(category.name).append(" =======")
+                    appendLine(
+                        """
+                        CATEGORY: ======= ${category.name}  =======
+                    """.trimIndent()
+                    )
                     for (operation in operations.values(category)) {
-                        sb.append("\n").append(operation.toString())
+                        appendLine(operation)
                     }
                 }
             } catch (e: Exception) {
-                sb.append(e.message)
-                sb.append("\n****!!!!FAILED TO GET LIST OF IN PROGRESS OPERATIONS!!!!****")
+                appendLine(
+                    """
+                    ${e.message}
+                    ****!!!!FAILED TO GET LIST OF IN PROGRESS OPERATIONS!!!!****
+                    """.trimIndent()
+                )
             }
-            sb.append("\n****************************\n").toString()
-        } finally {
-            lock.unlock()
+            appendLine("****************************")
         }
     }
 

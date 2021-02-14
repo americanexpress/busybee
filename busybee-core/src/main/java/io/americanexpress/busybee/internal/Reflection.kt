@@ -19,61 +19,54 @@ import java.lang.reflect.InvocationTargetException
 // we are doing a number of type-unsafe things here to seamlessly detect whether we are on Android or not.
 // Can't use the actual Android types because they might not exist, if we are in a pure JVM module
 internal object Reflection {
-    fun getValue(instance: Field?): Any {
-        return try {
-            instance!![null]
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException(e)
-        }
+    fun getValue(instance: Field): Any = try {
+        instance.get(null)
+    } catch (e: IllegalAccessException) {
+        throw RuntimeException(e)
     }
 
-    fun getField(clazz: Class<*>, fieldName: String?): Field {
-        return try {
-            clazz.getDeclaredField(fieldName)
-        } catch (e: NoSuchFieldException) {
-            throw RuntimeException(e)
-        }
+    fun getField(clazz: Class<*>, fieldName: String): Field = try {
+        clazz.getDeclaredField(fieldName)
+    } catch (e: NoSuchFieldException) {
+        throw RuntimeException(e)
     }
 
-    fun invokeStaticMethod(clazz: Class<*>, methodName: String?): Any {
-        return try {
-            clazz.getMethod(methodName).invoke(null)
-        } catch (e: NoSuchMethodException) {
-            throw RuntimeException(e)
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException(e)
-        } catch (e: InvocationTargetException) {
-            throw RuntimeException(e)
-        }
+    fun invokeStaticMethod(clazz: Class<*>, methodName: String): Any = try {
+        clazz.getMethod(methodName).invoke(null)
+    } catch (e: NoSuchMethodException) {
+        throw RuntimeException(e)
+    } catch (e: IllegalAccessException) {
+        throw RuntimeException(e)
+    } catch (e: InvocationTargetException) {
+        throw RuntimeException(e)
     }
 
-    fun invokeMethod(instance: Any?, methodName: String?, argTypes: Array<Class<*>?>, args: Array<Any>): Any {
-        return try {
-            instance!!.javaClass.getMethod(methodName, *argTypes).invoke(instance, *args)
-        } catch (e: NoSuchMethodException) {
-            throw RuntimeException(e)
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException(e)
-        } catch (e: InvocationTargetException) {
-            throw RuntimeException(e)
-        }
+    fun invokeMethod(
+        instance: Any,
+        methodName: String,
+        argTypes: Array<Class<*>>,
+        args: Array<Any>,
+    ): Any = try {
+        instance.javaClass.getMethod(methodName, *argTypes).invoke(instance, *args)
+    } catch (e: NoSuchMethodException) {
+        throw RuntimeException(e)
+    } catch (e: IllegalAccessException) {
+        throw RuntimeException(e)
+    } catch (e: InvocationTargetException) {
+        throw RuntimeException(e)
     }
 
     @JvmOverloads
     fun clazz(
         className: String,
-        notFoundErrorMessage: String? = "Error calling Class.forName on $className"
-    ): Class<*> {
-        val androidExecutorClass: Class<*>
-        androidExecutorClass = try {
-            Class.forName(className)
-        } catch (e: ClassNotFoundException) {
-            throw RuntimeException(notFoundErrorMessage, e)
-        }
-        return androidExecutorClass
+        notFoundErrorMessage: String = "Error calling Class.forName on $className",
+    ): Class<*> = try {
+        Class.forName(className)
+    } catch (e: ClassNotFoundException) {
+        throw RuntimeException(notFoundErrorMessage, e)
     }
 
-    fun classIsFound(className: String?): Boolean {
+    fun classIsFound(className: String): Boolean {
         try {
             Class.forName(className)
         } catch (e: ClassNotFoundException) {
@@ -82,17 +75,19 @@ internal object Reflection {
         return true
     }
 
-    fun invokeConstructor(classToConstruct: Class<*>, constructorArgType: Class<*>?, constructorArg: Any?): Any {
-        return try {
-            classToConstruct.getConstructor(constructorArgType).newInstance(constructorArg)
-        } catch (e: NoSuchMethodException) {
-            throw RuntimeException(e)
-        } catch (e: InstantiationException) {
-            throw RuntimeException(e)
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException(e)
-        } catch (e: InvocationTargetException) {
-            throw RuntimeException(e)
-        }
+    fun invokeConstructor(
+        classToConstruct: Class<*>,
+        constructorArgType: Class<*>,
+        constructorArg: Any,
+    ): Any = try {
+        classToConstruct.getConstructor(constructorArgType).newInstance(constructorArg)
+    } catch (e: NoSuchMethodException) {
+        throw RuntimeException(e)
+    } catch (e: InstantiationException) {
+        throw RuntimeException(e)
+    } catch (e: IllegalAccessException) {
+        throw RuntimeException(e)
+    } catch (e: InvocationTargetException) {
+        throw RuntimeException(e)
     }
 }

@@ -116,7 +116,7 @@ class BusyBeeTest {
     fun whenBusyWithSomething_thenNameIncludesSomething() {
         busyBee.busyWith("some thing")
 
-        assertThat(busyBee.name).contains("some thing")
+        assertThat(busyBee.getName()).contains("some thing")
     }
 
     @Test
@@ -191,11 +191,11 @@ class BusyBeeTest {
         private val IMMEDIATE: Executor = Executor { obj: Runnable -> obj.run() }
 
         private fun assertNotBusy(busyBee: BusyBee) {
-            assertTrue(busyBee.isNotBusy)
+            assertTrue(busyBee.isNotBusy())
         }
 
         private fun assertIsBusy(busyBee: BusyBee) {
-            assertFalse(busyBee.isNotBusy)
+            assertFalse(busyBee.isNotBusy())
         }
     }
 }

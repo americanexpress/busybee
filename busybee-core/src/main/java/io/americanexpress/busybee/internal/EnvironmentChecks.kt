@@ -14,6 +14,11 @@
 package io.americanexpress.busybee.internal
 
 import androidx.annotation.VisibleForTesting
+import io.americanexpress.busybee.internal.Reflection.classIsFound
+import io.americanexpress.busybee.internal.Reflection.clazz
+import io.americanexpress.busybee.internal.Reflection.invokeConstructor
+import io.americanexpress.busybee.internal.Reflection.invokeMethod
+import io.americanexpress.busybee.internal.Reflection.invokeStaticMethod
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
@@ -29,29 +34,31 @@ object EnvironmentChecks {
     }
 
     @VisibleForTesting
-    fun junit4IsPresent(): Boolean {
-        return Reflection.classIsFound("org.junit.runners.JUnit4")
-    }
+    fun junit4IsPresent(): Boolean = classIsFound("org.junit.runners.JUnit4")
 
     @VisibleForTesting
-    fun androidJunitRunnerIsPresent(): Boolean {
-        return Reflection.classIsFound("androidx.test.runner.AndroidJUnitRunner")
-    }
+    fun androidJunitRunnerIsPresent(): Boolean = classIsFound("androidx.test.runner.AndroidJUnitRunner")
 
-    // can't reference Android types directly, so have to use raw types.
     fun hasWorkingAndroidMainLooper(): Boolean {
         val runnable: FutureTask<Boolean>
         try {
-            val mainLooper: Any?
             val looperClass: Class<*> = clazz("android.os.Looper")
-            mainLooper = Reflection.invokeStaticMethod(looperClass, "getMainLooper")
+
+            val mainLooper = invokeStaticMethod(looperClass, "getMainLooper")
+            val myLooper = invokeStaticMethod(looperClass, "myLooper")
+            if (mainLooper == myLooper) {
+                // we are already on the main looper so it must be working.
+                return true
+            }
+            // else we will try and execute something on the main thread.
             val handlerClass: Class<*> = clazz("android.os.Handler")
-            val handler = Reflection.invokeConstructor(handlerClass, looperClass, mainLooper)
+            val handler = invokeConstructor(handlerClass, looperClass, mainLooper)
             runnable = FutureTask { true }
-            Reflection.invokeMethod(
-                handler, "postAtFrontOfQueue", arrayOf<Class<*>?>(
-                    Runnable::class.java
-                ), arrayOf<Any>(runnable)
+            invokeMethod(
+                handler,
+                "postAtFrontOfQueue",
+                arrayOf(Runnable::class.java),
+                arrayOf(runnable)
             )
         } catch (e: RuntimeException) {
             if (e.cause is ReflectiveOperationException) {
@@ -61,7 +68,7 @@ object EnvironmentChecks {
             throw e
         }
         return try {
-            runnable[5, TimeUnit.SECONDS]
+            runnable.get(5, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             false
         } catch (e: ExecutionException) {

@@ -13,8 +13,8 @@
  */
 package io.americanexpress.busybee
 
+import io.americanexpress.busybee.BusyBee.Category.Companion.defaultCategory
 import io.americanexpress.busybee.internal.NoOpBusyBee
-import java.util.Locale
 import java.util.concurrent.Executor
 import java.util.logging.Logger
 
@@ -27,13 +27,13 @@ import java.util.logging.Logger
  * All executed runnables will be execute using the wrapped executor.
  */
 class BusyBeeExecutorWrapper private constructor(
-    private val busyBee: BusyBee?,
+    private val busyBee: BusyBee,
     private val category: BusyBee.Category,
     private val delegate: Executor
 ) : Executor {
     override fun execute(command: Runnable) {
-        log.info(String.format(Locale.US, "Starting %s on thread %s", command, Thread.currentThread()))
-        busyBee!!.busyWith(command, category)
+        log.info("Starting $command on thread ${Thread.currentThread()}")
+        busyBee.busyWith(command, category)
         delegate.execute {
             try {
                 command.run()
@@ -44,8 +44,8 @@ class BusyBeeExecutorWrapper private constructor(
     }
 
     class Builder {
-        private var busyBee: BusyBee? = null
-        private var category: BusyBee.Category = BusyBee.Category.Companion.defaultCategory()
+        private lateinit var busyBee: BusyBee
+        private var category: BusyBee.Category = defaultCategory()
         private var wrappedExecutor: Executor? = null
         fun busyBee(busyBee: BusyBee): Builder {
             this.busyBee = busyBee
@@ -63,21 +63,18 @@ class BusyBeeExecutorWrapper private constructor(
         }
 
         fun build(): Executor {
-            if (wrappedExecutor == null) {
-                throw NullPointerException("BusyBeeExecutorWrapper must has an underlying executor to wrap, can't be null.")
-            }
+            val wrappedExecutorLocal = wrappedExecutor
+                ?: throw NullPointerException("BusyBeeExecutorWrapper must has an underlying executor to wrap, can't be null.")
             return if (busyBee is NoOpBusyBee) {
-                wrappedExecutor
+                wrappedExecutorLocal
             } else {
-                BusyBeeExecutorWrapper(busyBee, category, wrappedExecutor!!)
+                BusyBeeExecutorWrapper(busyBee, category, wrappedExecutorLocal)
             }
         }
     }
 
     companion object {
         private val log = Logger.getLogger("io.americanexpress.busybee")
-        fun with(busyBee: BusyBee): Builder {
-            return Builder().busyBee(busyBee)
-        }
+        fun with(busyBee: BusyBee): Builder = Builder().busyBee(busyBee)
     }
 }

@@ -22,7 +22,7 @@ import org.junit.Test
 class AndroidMainThreadExecutorTest {
     @Test
     fun whenHasWorkingAndroidMainLooper_thenWeGetAndroidMainThreadExecutor() {
-        assertThat(MainThread.singletonExecutor())
+        assertThat(MainThread.singletonExecutor)
             .isInstanceOf(AndroidMainThreadExecutor::class.java)
     }
 

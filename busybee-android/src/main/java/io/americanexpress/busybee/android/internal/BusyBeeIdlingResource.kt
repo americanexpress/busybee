@@ -25,9 +25,9 @@ import io.americanexpress.busybee.BusyBee
  * `IdlingRegistry.getInstance().register(new BusyBeeIdlingResource(BusyBee.singleton()));`
  */
 class BusyBeeIdlingResource internal constructor(private val busyBee: BusyBee) : IdlingResource {
-    override fun getName() = busyBee.name
+    override fun getName() = busyBee.getName()
 
-    override fun isIdleNow() = busyBee.isNotBusy
+    override fun isIdleNow() = busyBee.isNotBusy()
 
     override fun registerIdleTransitionCallback(resourceCallback: ResourceCallback) {
         busyBee.registerNoLongerBusyCallback { resourceCallback.onTransitionToIdle() }

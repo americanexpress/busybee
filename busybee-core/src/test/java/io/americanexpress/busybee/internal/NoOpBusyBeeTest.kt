@@ -24,8 +24,8 @@ class NoOpBusyBeeTest {
         val busyBee = NoOpBusyBee()
         busyBee.busyWith("SOMETHING")
 
-        assertThat(busyBee.isNotBusy).isTrue()
-        assertThat(busyBee.isBusy).isFalse()
+        assertThat(busyBee.isNotBusy()).isTrue()
+        assertThat(busyBee.isBusy()).isFalse()
     }
 
     @Test
@@ -37,11 +37,10 @@ class NoOpBusyBeeTest {
         busyBee.ignoreCategory(NETWORK)
         busyBee.completedEverything()
         busyBee.completedEverythingInCategory(GENERAL)
-        busyBee.name
 
-        assertThat(busyBee.isNotBusy).isTrue()
-        assertThat(busyBee.isBusy).isFalse()
-        assertThat(busyBee.name).isNotNull()
+        assertThat(busyBee.isNotBusy()).isTrue()
+        assertThat(busyBee.isBusy()).isFalse()
+        assertThat(busyBee.getName()).isNotNull()
         assertThat(busyBee.toStringVerbose()).isNotNull()
     }
 }

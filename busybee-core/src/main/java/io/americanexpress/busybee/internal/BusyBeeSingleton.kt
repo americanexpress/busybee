@@ -17,15 +17,13 @@ import androidx.annotation.VisibleForTesting
 import io.americanexpress.busybee.BusyBee
 
 object BusyBeeSingleton {
-    private val SINGLETON = create()
-    fun singleton(): BusyBee {
-        return SINGLETON
-    }
+    private val SINGLETON by lazy { create() }
+    fun singleton(): BusyBee = SINGLETON
 
     @VisibleForTesting
     fun create(): BusyBee {
         return if (EnvironmentChecks.testsAreRunning()) {
-            RealBusyBee(MainThread.singletonExecutor())
+            RealBusyBee(MainThread.singletonExecutor)
         } else {
             NoOpBusyBee()
         }

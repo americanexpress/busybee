@@ -17,36 +17,22 @@ import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 object MainThread {
-    // Double check locking https://errorprone.info/bugpattern/DoubleCheckedLocking
-    @Volatile
-    private var INSTANCE: Executor? = null
-    private fun jvmExecutor(): Executor? {
-        var instance = INSTANCE
-        if (instance == null) {
-            synchronized(MainThread::class.java) {
-                instance = INSTANCE
-                if (instance == null) {
-                    INSTANCE = Executors.newSingleThreadExecutor()
-                }
-            }
-        }
-        return INSTANCE
-    }
-
-    fun singletonExecutor(): Executor? {
+    val singletonExecutor: Executor by lazy {
         /*
          * Can only load AndroidMainThreadExecutor if we are on Android (not JVM)
          * else will we get class not found errors.
          */
-        return if (EnvironmentChecks.hasWorkingAndroidMainLooper()) {
+        return@lazy if (EnvironmentChecks.hasWorkingAndroidMainLooper()) {
             val androidExecutorClass = Reflection.clazz(
-                "io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor",
-                "Must add busybee-android dependency when running on Android"
+                className = "io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor",
+                notFoundErrorMessage = "Must add busybee-android dependency when running on Android"
             )
             val instance = Reflection.getField(androidExecutorClass, "INSTANCE")
             Reflection.getValue(instance) as Executor
         } else {
-            jvmExecutor()
+            // use this on JVM when there is no Android Main Thread
+            Executors.newSingleThreadExecutor()
+
         }
     }
 }

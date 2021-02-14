@@ -23,8 +23,7 @@ import io.americanexpress.busybee.BusyBee.OperationMatcher
  * This minimizes the overhead of having BusyBee in your app.
  */
 class NoOpBusyBee internal constructor() : BusyBee {
-    override val name: String
-        get() = "NO-OP BusyBee"
+    override fun getName(): String = "NO-OP BusyBee"
 
     override fun busyWith(operation: Any) {}
     override fun busyWith(operation: Any, category: BusyBee.Category) {}
@@ -35,12 +34,8 @@ class NoOpBusyBee internal constructor() : BusyBee {
     override fun completedEverything() {}
     override fun completedEverythingMatching(matcher: OperationMatcher) {}
     override fun completed(operation: Any) {}
-    override val isNotBusy: Boolean
-        get() = true
-    override val isBusy: Boolean
-        get() = false
+    override fun isNotBusy(): Boolean = true
+    override fun isBusy(): Boolean = false
 
-    override fun toStringVerbose(): String {
-        return "NO-OP BusyBee"
-    }
+    override fun toStringVerbose(): String = "NO-OP BusyBee"
 }
