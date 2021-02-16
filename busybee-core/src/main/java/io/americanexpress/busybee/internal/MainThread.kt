@@ -13,8 +13,12 @@
  */
 package io.americanexpress.busybee.internal
 
+import io.americanexpress.busybee.internal.EnvironmentChecks.hasWorkingAndroidMainLooper
+import io.americanexpress.busybee.internal.Reflection.clazz
+import io.americanexpress.busybee.internal.Reflection.getField
+import io.americanexpress.busybee.internal.Reflection.getValue
 import java.util.concurrent.Executor
-import java.util.concurrent.Executors
+import java.util.concurrent.Executors.newSingleThreadExecutor
 
 object MainThread {
     val singletonExecutor: Executor by lazy {
@@ -22,17 +26,16 @@ object MainThread {
          * Can only load AndroidMainThreadExecutor if we are on Android (not JVM)
          * else will we get class not found errors.
          */
-        return@lazy if (EnvironmentChecks.hasWorkingAndroidMainLooper()) {
-            val androidExecutorClass = Reflection.clazz(
+        return@lazy if (hasWorkingAndroidMainLooper()) {
+            val androidExecutorClass = clazz(
                 className = "io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor",
                 notFoundErrorMessage = "Must add busybee-android dependency when running on Android"
             )
-            val instance = Reflection.getField(androidExecutorClass, "INSTANCE")
-            Reflection.getValue(instance) as Executor
+            val instance = getField(androidExecutorClass, "INSTANCE")
+            getValue(instance) as Executor
         } else {
             // use this on JVM when there is no Android Main Thread
-            Executors.newSingleThreadExecutor()
-
+            newSingleThreadExecutor()
         }
     }
 }
