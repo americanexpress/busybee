@@ -64,7 +64,7 @@ class BusyBeeExecutorWrapper private constructor(
 
         fun build(): Executor {
             val wrappedExecutorLocal = wrappedExecutor
-                ?: throw NullPointerException("BusyBeeExecutorWrapper must has an underlying executor to wrap, can't be null.")
+                ?: throw NullPointerException("BusyBeeExecutorWrapper must have an underlying executor to wrap, can't be null.")
             return if (busyBee is NoOpBusyBee) {
                 wrappedExecutorLocal
             } else {

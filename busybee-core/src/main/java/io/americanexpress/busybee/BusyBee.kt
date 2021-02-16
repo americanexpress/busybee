@@ -109,7 +109,7 @@ interface BusyBee {
     /**
      * No operations that we are paying attention to is currently in progress
      *
-     * @return true if and only if we are not busyWith an
+     * @return true if and only if we are not busyWith an operation
      */
     fun isNotBusy(): Boolean
 
