@@ -125,9 +125,9 @@ class SetMultiMap<K : Any, V : Any> {
 
             override fun remove() {
                 reverseMapIterator.remove()
-                // TODO: Clean up, the `!!` is mimicking the java logic.
-                //  While this should never be null, we can provide a better error message.
-                map[reverseEntry.value]!!.remove(reverseEntry.key)
+                val setOfValuesFromForwardMap =
+                    requireNotNull(map[reverseEntry.value]) { "Invariant not met. Key not found in forward map." }
+                setOfValuesFromForwardMap.remove(reverseEntry.key)
             }
         }
     }
