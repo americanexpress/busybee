@@ -218,8 +218,7 @@ class SetMultiMapTest {
         map.add(3, "D")
 
         assertThat(map.toString()).isEqualTo(
-            "\n" +
-                    """
+            "\n" + """
                {
                '1'
                 ├─ 'A'
@@ -228,9 +227,9 @@ class SetMultiMapTest {
                 ├─ 'X'
                 └─ 'Y'
                '3'
+                ├─ 'E'
                 ├─ 'C'
-                ├─ 'D'
-                └─ 'E'
+                └─ 'D'
                }""".trimIndent()
         )
 

@@ -20,7 +20,7 @@ import org.junit.Test
 class MainThreadTest {
     @Test
     fun whenOnJvm_thenWeGetTheNonAndroidExecutor() {
-        val executor = MainThread.singletonExecutor()
+        val executor = MainThread.singletonExecutor
         assertThat(executor.javaClass.name)
             .isNotEqualTo("io.americanexpress.busybee.android.internal.AndroidMainThreadExecutor")
     }

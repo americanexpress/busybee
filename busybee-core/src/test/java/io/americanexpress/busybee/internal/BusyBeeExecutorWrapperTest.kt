@@ -39,7 +39,7 @@ class BusyBeeExecutorWrapperTest {
 
     @Test
     fun whenWrappedWithBusyBeeExecutorWrapper_thenBusyBeeSaysItIsBusy() {
-        val mainThread = MainThread.singletonExecutor() as ExecutorService
+        val mainThread = MainThread.singletonExecutor as ExecutorService
         val busyBee = RealBusyBee(mainThread)
         val wrappedThread = Executors.newSingleThreadExecutor()
         val executorWrapper =
@@ -60,10 +60,10 @@ class BusyBeeExecutorWrapperTest {
         // shouldn't complete anything because our executor uses NETWORK category
         busyBee.completedEverythingInCategory(GENERAL)
 
-        assertThat(busyBee.isBusy)
+        assertThat(busyBee.isBusy())
             .`as`("Should be \"busy\" waiting for Latch")
             .isTrue()
-        assertThat(busyBee.isNotBusy)
+        assertThat(busyBee.isNotBusy())
             .`as`("Should be \"busy\" waiting for Latch")
             .isFalse()
 
@@ -77,10 +77,10 @@ class BusyBeeExecutorWrapperTest {
         mainThread.shutdown()
         mainThread.awaitTermination(10, SECONDS)
 
-        assertThat(busyBee.isBusy)
+        assertThat(busyBee.isBusy())
             .`as`("Should no longer be \"busy\" waiting for Latch")
             .isFalse()
-        assertThat(busyBee.isNotBusy)
+        assertThat(busyBee.isNotBusy())
             .`as`("Should no longer be \"busy\" waiting for Latch")
             .isTrue()
     }
