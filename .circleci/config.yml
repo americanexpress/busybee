@@ -3,8 +3,10 @@ version: 2.1
 executors:
   android-api29:
     docker:
-      # https://hub.docker.com/layers/circleci/android/api-29/images/sha256-2f83a26e7d875a74c2fd4edb643168654bc8028a258bcc71a6bfd1ea26580f82?context=explore
-      - image: circleci/android@sha256:2f83a26e7d875a74c2fd4edb643168654bc8028a258bcc71a6bfd1ea26580f82
+      # https://hub.docker.com/layers/circleci/android/api-29/images/sha256-9fc0f34301182ba3730b1ca085e827927675168e57d412f6cc86256c7cd28e2d
+      #  api-29, JDK 11.0.10, commandlinetools-linux-6609375_latest.zip
+      - image: circleci/android@sha256:9fc0f34301182ba3730b1ca085e827927675168e57d412f6cc86256c7cd28e2d
+
 
 anchors:
   - &common_job_config
@@ -27,7 +29,7 @@ jobs:
       - checkout
       - run:
           name: Publish -SNAPSHOT
-          command: MAVEN_REPO_URL="https://oss.jfrog.org/artifactory/oss-snapshot-local/" ./gradlew build publish --stacktrace
+          command: MAVEN_REPO_URL="https://s01.oss.sonatype.org/content/repositories/snapshots/" ./gradlew build publish --stacktrace
 
   publish-release:
     <<: *common_job_config
@@ -35,12 +37,14 @@ jobs:
       - checkout
       - run:
           name: Publish Release
-          command: MAVEN_REPO_URL="https://api.bintray.com/maven/americanexpress/maven/io.americanexpress.busybee/;publish=0" ./gradlew build publish -Dsnapshot=false --stacktrace
+          command: MAVEN_REPO_URL="https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/" ./gradlew build publish -Dsnapshot=false --stacktrace
 
 
 workflows_setup:
   - &context
-    context: gradle
+    context:
+      - maven_central_credentials
+      - code_signing_credentials
 
   - &default_branch
       "main"
