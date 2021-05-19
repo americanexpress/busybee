@@ -52,7 +52,7 @@ _Optional_: Only needed, if you want to use BusyBee in a non-Android module:
 ```gradle
     repositories {
         jcenter() // for release builds
-        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' } // `-SNAPSHOT` builds from `master` 
+        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' } // `-SNAPSHOT` builds from `main`
     }    
 ```
 
@@ -134,5 +134,5 @@ guidelines.
 [idlingresource]: https://developer.android.com/reference/androidx/test/espresso/IdlingResource
 [countingidlingresource]: https://developer.android.com/reference/androidx/test/espresso/idling/CountingIdlingResource
 [fill out the agreement]: https://cla-assistant.io/americanexpress/busybee
-[apache license 2.0]: https://github.com/americanexpress/busybee/blob/master/LICENSE.txt
-[american express community guidelines]: https://github.com/americanexpress/busybee/blob/master/CODE_OF_CONDUCT.md
+[apache license 2.0]: https://github.com/americanexpress/busybee/blob/main/LICENSE.txt
+[american express community guidelines]: https://github.com/americanexpress/busybee/blob/main/CODE_OF_CONDUCT.md

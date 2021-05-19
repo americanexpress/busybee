@@ -43,7 +43,7 @@ workflows_setup:
     context: gradle
 
   - &default_branch
-      "master"
+      "main"
 
 workflows:
   pull_request_workflow:
