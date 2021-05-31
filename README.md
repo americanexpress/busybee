@@ -35,7 +35,7 @@ In some ways, BusyBee is similar to [CountingIdlingResource][], but it does have
 Include the BusyBee dependencies in your `build.gradle` files. When tests are not running, the **no-op** implementation
 is automatically used to minimize overhead of BusyBee (since it is only needed during tests).
 
-[ ![Latest Version](https://api.bintray.com/packages/americanexpress/maven/io.americanexpress.busybee/images/download.svg) ](https://bintray.com/americanexpress/maven/io.americanexpress.busybee/_latestVersion)
+[Find the latest version on Maven Central](https://search.maven.org/artifact/io.americanexpress.busybee/busybee-core)
 
 _Required_: For Android modules:
 
@@ -49,12 +49,18 @@ _Optional_: Only needed, if you want to use BusyBee in a non-Android module:
     implementation 'io.americanexpress.busybee:busybee-core:$version'
 ```
 
+BusyBee releases are available on Maven Central.
+
 ```gradle
     repositories {
-        jcenter() // for release builds
-        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' } // `-SNAPSHOT` builds from `main`
+        exclusiveContent {
+            forRepository { mavenCentral() }
+            filter { includeGroup("io.americanexpress.busybee") }
+        }
     }    
 ```
+
+On each merge to `main`, a `-SNAPSHOT` version is published to https://s01.oss.sonatype.org/content/repositories/snapshots/
 
 Inside your _app_, tell `BusyBee` what operations your app is `busyWith`, and when that operation is `completed`.
 
