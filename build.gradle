@@ -1,3 +1,5 @@
+import java.nio.charset.Charset
+
 /*
  * Copyright 2020 American Express Travel Related Services Company, Inc.
  *
@@ -18,6 +20,7 @@ buildscript {
         jcenter()
     }
     dependencies {
+        classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.4.32'
         classpath 'com.android.tools.build:gradle:4.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -56,7 +59,9 @@ subprojects {
 
     ext.compilerArgs = ["-Werror"]
 
+    apply plugin: 'org.jetbrains.dokka'
     apply plugin: 'maven-publish'
+    apply plugin: 'signing'
 
     group = rootProject.group
     version = rootProject.version
@@ -85,6 +90,9 @@ subprojects {
                     jvmTarget = "1.8"
                 }
             }
+            java {
+                withSourcesJar()
+            }
         }
 
         if (plugins.hasPlugin('com.android.library')
@@ -102,26 +110,24 @@ subprojects {
             }
         }
 
+        // Use getenv so they can be passed in without having them in a file
+        // or in the command args
+        def maven_username = System.getenv('MAVEN_CENTRAL_USERNAME') ?: ''
+        def maven_password = System.getenv('MAVEN_CENTRAL_PASSWORD') ?: ''
+
         // from https://docs.gradle.org/current/userguide/publishing_maven.html
         if (plugins.hasPlugin('java-library')) {
-            task sourcesJar(type: Jar){
-                from sourceSets.main.allJava
-                getArchiveClassifier().set('sources')
-            }
-
-            task javadocJar(type: Jar){
-                from javadoc
-                getArchiveClassifier().set('javadoc')
-            }
-
             publishing {
+                task dokkaJavadocJar(type: Jar) {
+                    from dokkaJavadoc.outputDirectory
+                }
                 repositories {
                     maven {
                         // Use getenv so they can be passed in without having them in a file
                         // or in the command args
                         credentials {
-                            username System.getenv('MAVEN_REPO_USERNAME') ?: ''
-                            password System.getenv('MAVEN_REPO_PASSWORD') ?: ''
+                            username maven_username
+                            password maven_password
                         }
 
                         url System.getenv('MAVEN_REPO_URL')
@@ -132,65 +138,106 @@ subprojects {
                     // artifactId comes from the name of the gradle module
                     busybee(MavenPublication) {
                         from components.java
-                        artifact sourcesJar
-                        artifact javadocJar
+                        artifact dokkaJavadocJar {
+                            getArchiveClassifier().set('javadoc')
+                        }
+                        pom {
+                            name = 'busybee'
+                            description = 'BusyBee is an alternative API for IdlingResources in Espresso tests.'
+                            url = 'https://github.com/americanexpress/busybee'
+                            licenses {
+                                license {
+                                    name = 'The Apache License, Version 2.0'
+                                    url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                }
+                            }
+                            developers {
+                                developer {
+                                    name = 'American Express Travel Related Services Company, Inc.'
+                                }
+                            }
+                            scm {
+                                connection = 'scm:git:https://github.com/americanexpress/busybee.git'
+                                developerConnection = 'scm:git:git@github.com:americanexpress/busybee.git'
+                                url = 'https://github.com/americanexpress/busybee'
+                            }
+                        }
                     }
+                }
+            }
+            def signingKeyBase64 = findProperty("signingKey_base64")
+            if (signingKeyBase64 != null) {
+                signing {
+                    def signingKey = new String(Base64.decoder.decode(signingKeyBase64), Charset.forName("UTF-8"))
+                    def signingPassword = findProperty("signingPassword")
+                    useInMemoryPgpKeys(signingKey, signingPassword)
+                    sign publishing.publications.busybee
                 }
             }
         }
 
         if (plugins.hasPlugin('com.android.library')) {
-            task releaseSourcesJar(type: Jar) {
-                getArchiveClassifier().set('sources')
-                from android.sourceSets.release.java.srcDirs
-            }
-
-            artifacts {
-                archives releaseSourcesJar
-            }
-
-            task androidSourcesJar(type: Jar) {
-                from android.sourceSets.main.java.srcDirs
-            }
-
-            publishing {
-                repositories {
-                    maven {
-                        // Use getenv so they can be passed in without having them in a file
-                        // or in the command args
-                        credentials {
-                            username System.getenv('MAVEN_REPO_USERNAME') ?: ''
-                            password System.getenv('MAVEN_REPO_PASSWORD') ?: ''
-                        }
-
-                        url System.getenv('MAVEN_REPO_URL')
-                    }
+            // need afterEvaluate else the components.release will be missing below
+            afterEvaluate {
+                // need this until it is built into AGP, see https://issuetracker.google.com/issues/145670440
+                task androidSourcesJar(type: Jar) {
+                    from android.sourceSets.main.java.srcDirs
                 }
-                publications {
-                    // groupId and version come from gradle.properties
-                    // artifactId comes from the name of the gradle module
-                    busybee(MavenPublication) {
-                        artifact("build/outputs/aar/${project.name}-release.aar")
+                task dokkaJavadocJar(type: Jar) {
+                    from dokkaJavadoc.outputDirectory
+                }
+                publishing {
+                    repositories {
+                        maven {
+                            credentials {
+                                username maven_username
+                                password maven_password
+                            }
 
-                        artifact androidSourcesJar {
-                            getArchiveClassifier().set('sources')
+                            url System.getenv('MAVEN_REPO_URL')
                         }
-
-                        // Manually add the dependencies because the android plugin does not support SoftwareComponent
-                        pom.withXml {
-                            def dependenciesNode = asNode().appendNode('dependencies')
-
-                            configurations.implementation.allDependencies.each {
-                                def dependencyNode = dependenciesNode.appendNode('dependency')
-                                dependencyNode.appendNode('groupId', it.group)
-                                dependencyNode.appendNode('artifactId', it.name)
-
-                                if (it.group == group) {
-                                    dependencyNode.appendNode('version', version)
-                                } else {
-                                    dependencyNode.appendNode('version', it.version)
+                    }
+                    publications {
+                        // groupId and version come from gradle.properties
+                        // artifactId comes from the name of the gradle module
+                        busybee(MavenPublication) {
+                            from components.release
+                            artifact androidSourcesJar {
+                                getArchiveClassifier().set('sources')
+                            }
+                            artifact dokkaJavadocJar {
+                                getArchiveClassifier().set('javadoc')
+                            }
+                            pom {
+                                name = 'busybee'
+                                description = 'BusyBee is an alternative API for IdlingResources in Espresso tests.'
+                                url = 'https://github.com/americanexpress/busybee'
+                                licenses {
+                                    license {
+                                        name = 'The Apache License, Version 2.0'
+                                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                    }
+                                }
+                                developers {
+                                    developer {
+                                        name = 'American Express Travel Related Services Company, Inc.'
+                                    }
+                                }
+                                scm {
+                                    connection = 'scm:git:https://github.com/americanexpress/busybee.git'
+                                    developerConnection = 'scm:git:git@github.com:americanexpress/busybee.git'
+                                    url = 'https://github.com/americanexpress/busybee'
                                 }
                             }
+                        }
+                    }
+                    def signingKeyBase64 = findProperty("signingKey_base64")
+                    if (signingKeyBase64 != null) {
+                        signing {
+                            def signingKey = new String(Base64.decoder.decode(signingKeyBase64), Charset.forName("UTF-8"))
+                            def signingPassword = findProperty("signingPassword")
+                            useInMemoryPgpKeys(signingKey, signingPassword)
+                            sign publishing.publications.busybee
                         }
                     }
                 }
