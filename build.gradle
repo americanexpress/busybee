@@ -165,11 +165,14 @@ subprojects {
                     }
                 }
             }
-            signing {
-                def signingKey = new String(Base64.decoder.decode(findProperty("signingKey_base64")), Charset.forName("UTF-8"))
-                def signingPassword = findProperty("signingPassword")
-                useInMemoryPgpKeys(signingKey, signingPassword)
-                sign publishing.publications.busybee
+            def signingKeyBase64 = findProperty("signingKey_base64")
+            if (signingKeyBase64 != null) {
+                signing {
+                    def signingKey = new String(Base64.decoder.decode(signingKeyBase64), Charset.forName("UTF-8"))
+                    def signingPassword = findProperty("signingPassword")
+                    useInMemoryPgpKeys(signingKey, signingPassword)
+                    sign publishing.publications.busybee
+                }
             }
         }
 
@@ -228,11 +231,14 @@ subprojects {
                             }
                         }
                     }
-                    signing {
-                        def signingKey = new String(Base64.decoder.decode(findProperty("signingKey_base64")), Charset.forName("UTF-8"))
-                        def signingPassword = findProperty("signingPassword")
-                        useInMemoryPgpKeys(signingKey, signingPassword)
-                        sign publishing.publications.busybee
+                    def signingKeyBase64 = findProperty("signingKey_base64")
+                    if (signingKeyBase64 != null) {
+                        signing {
+                            def signingKey = new String(Base64.decoder.decode(signingKeyBase64), Charset.forName("UTF-8"))
+                            def signingPassword = findProperty("signingPassword")
+                            useInMemoryPgpKeys(signingKey, signingPassword)
+                            sign publishing.publications.busybee
+                        }
                     }
                 }
             }
