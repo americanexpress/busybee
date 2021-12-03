@@ -111,11 +111,6 @@ cause `BusyBee` to be "busy" while they are in progress.
     busyBeeBackgroundTasks.execute(operation);
 ```
 
-## Why is this written in Java and not Kotlin?
-
-We wanted to get an initial release out that didn't depend on the Kotlin standard library, but we plan on converting the
-implementation to 100% Kotlin.
-
 ## Contributing
 
 We welcome Your interest in the American Express Open Source Community on Github. Any Contributor to any Open Source
