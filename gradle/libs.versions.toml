@@ -1,0 +1,20 @@
+[versions]
+compileSdk = "android-29"
+targetSdk = "29"
+minimumSdk = "19"
+kotlin = "1.6.0"
+junit = "4.13.1"
+assertj = "2.6.0"
+mockito2 = "3.0.0"
+androidx_material = "1.0.0"
+androidx_annotation = "1.1.0"
+androidx_test_rules = "1.2.0"
+androidx_espresso = "3.2.0"
+
+[libraries]
+kotlin_stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+junit4 = { module = "junit:junit", version.ref = "junit" }
+assertj_core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito2" }
+androidx_espresso_core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx_espresso" }
+androidx_espresso_idling_resource = { module = "androidx.test.espresso:espresso-idling-resource", version.ref = "androidx_espresso" }
