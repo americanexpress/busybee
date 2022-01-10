@@ -16,5 +16,8 @@ kotlin_stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.re
 junit4 = { module = "junit:junit", version.ref = "junit" }
 assertj_core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito2" }
+androidx_test_rules = { module = "androidx.test:rules", version.ref = "androidx_test_rules" }
+androidx_material = { module = "com.google.android.material:material", version.ref = "androidx_material" }
+androidx_annotation = { module = "androidx.annotation:annotation", version.ref = "androidx_annotation" }
 androidx_espresso_core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx_espresso" }
 androidx_espresso_idling_resource = { module = "androidx.test.espresso:espresso-idling-resource", version.ref = "androidx_espresso" }
