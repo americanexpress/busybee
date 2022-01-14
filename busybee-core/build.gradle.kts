@@ -12,8 +12,8 @@
  * the License.
  */
 plugins {
-    id 'java-library'
-    id 'org.jetbrains.kotlin.jvm'
+    `java-library`
+    id("org.jetbrains.kotlin.jvm")
 }
 
 repositories {
@@ -21,12 +21,12 @@ repositories {
 }
 
 dependencies {
-    implementation "androidx.annotation:annotation:${deps.androidx.annotation}"
+    implementation(libs.androidx.annotation)
     // Android Studio 3.6 thinks we are using a different version of kotlin here, but we are not
     //noinspection DifferentStdlibGradleVersion
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation(libs.kotlin.stdlib)
 
-    testImplementation "org.assertj:assertj-core:${deps.assertj}"
-    testImplementation "org.mockito:mockito-core:${deps.mockito2}"
-    testImplementation "junit:junit:${deps.junit}"
+    testImplementation(libs.assertj.core)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.junit4)
 }
