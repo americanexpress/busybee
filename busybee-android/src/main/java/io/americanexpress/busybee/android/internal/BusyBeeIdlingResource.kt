@@ -24,8 +24,11 @@ import io.americanexpress.busybee.BusyBee
  * You must register it with Espresso:
  * `IdlingRegistry.getInstance().register(new BusyBeeIdlingResource(BusyBee.singleton()));`
  */
+
+private const val NAME_MAX_LENGTH = 100
+
 class BusyBeeIdlingResource internal constructor(private val busyBee: BusyBee) : IdlingResource {
-    override fun getName() = busyBee.getName()
+    override fun getName() = busyBee.getName().take(NAME_MAX_LENGTH)
 
     override fun isIdleNow() = busyBee.isNotBusy()
 
