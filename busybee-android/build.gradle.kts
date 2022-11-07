@@ -16,11 +16,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-repositories {
-    google()
-    jcenter()
-}
-
 android {
     compileSdkVersion = libs.versions.compileSdk.get()
     defaultConfig {

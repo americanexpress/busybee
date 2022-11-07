@@ -17,10 +17,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-repositories {
-    jcenter()
-}
-
 group = "io.americanexpress.busybee.app"
 
 android {

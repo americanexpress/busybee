@@ -16,10 +16,6 @@ plugins {
     id("org.jetbrains.kotlin.jvm")
 }
 
-repositories {
-    jcenter()
-}
-
 dependencies {
     implementation(libs.androidx.annotation)
     // Android Studio 3.6 thinks we are using a different version of kotlin here, but we are not

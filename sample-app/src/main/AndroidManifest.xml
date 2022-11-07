@@ -19,7 +19,9 @@
         android:allowBackup="false"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
-        <activity android:name=".sample.BusyBeeActivity">
+        <activity android:name=".sample.BusyBeeActivity"
+                  android:exported="true"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
