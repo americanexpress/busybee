@@ -16,8 +16,17 @@ import java.nio.charset.Charset
 buildscript {
     ext.kotlin_version = '1.6.0'
     repositories {
-        google()
-        jcenter()
+        mavenCentral()
+        exclusiveContent {
+            forRepository { google() }
+            filter {
+                includeGroupByRegex("androidx\\..*")
+                includeGroupByRegex("com\\.android\\..*")
+                includeGroup("com.android")
+                includeGroup("com.google.testing.platform")
+                includeGroup("com.google.android.material")
+            }
+        }
     }
     dependencies {
         classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.6.0'
@@ -28,8 +37,17 @@ buildscript {
 
 allprojects {
     repositories {
-        google()
-        jcenter()
+        mavenCentral()
+        exclusiveContent {
+            forRepository { google() }
+            filter {
+                includeGroupByRegex("androidx\\..*")
+                includeGroupByRegex("com\\.android\\..*")
+                includeGroup("com.android")
+                includeGroup("com.google.testing.platform")
+                includeGroup("com.google.android.material")
+            }
+        }
     }
 }
 
